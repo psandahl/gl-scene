@@ -16,9 +16,9 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Scene
-  other-modules:       Scene.Event
-                       Scene.Kernel
+  other-modules:       Scene.Kernel
                        Scene.Runtime
+                       Scene.Types
                        Scene.Viewer
   build-depends:       base >= 4.7 && < 5
                      , async
@@ -28,6 +28,7 @@ library
                      , gl
                      , GLFW-b
                      , linear
+                     , mtl
                      , stm
                      , text
                      , unordered-containers

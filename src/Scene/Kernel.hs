@@ -11,14 +11,21 @@ module Scene.Kernel
     , viewScenes
     ) where
 
-import           Scene.Event  (Event (..))
-import           Scene.Viewer (Viewer (..))
+import           Control.Monad          (unless, when)
+import           Control.Monad.Except   (runExceptT, throwError)
+import           Control.Monad.IO.Class (liftIO)
+import           Data.Maybe             (isNothing)
+import           Graphics.UI.GLFW       (Window)
+import           Graphics.UI.GLFW       as GLFW
+import           Scene.Types            (Event (..))
+import           Scene.Viewer           (Viewer (..))
 
 -- | Configuration data for the 'Viewer' window to create.
 data Configuration = Configuration
     { caption        :: !String
     , glVersionMajor :: !Int
     , glVersionMinor :: !Int
+    , displayMode    :: !DisplayMode
     , debugContext   :: !Bool
     } deriving Show
 
@@ -35,6 +42,7 @@ defaultConfiguration =
         { caption = "Scene Viewer"
         , glVersionMajor = 3
         , glVersionMinor = 3
+        , displayMode = Windowed 1024 768
         , debugContext = True
         }
 
@@ -49,4 +57,57 @@ viewScenes :: Configuration
            -> (Viewer -> Event -> a -> IO a)
            -> (Viewer -> a -> IO ())
            -> IO (Either String ())
-viewScenes configuration onInit onEvent onExit = undefined
+viewScenes configuration onInit onEvent onExit = do
+    result <- makeWindow configuration
+    case result of
+        Right (window, width, height) -> undefined
+        Left err                      -> return $ Left err
+
+-- | Do all the low level stuff to setup a GL context/GLFW window.
+makeWindow :: Configuration -> IO (Either String (Window, Int, Int))
+makeWindow configuration =
+    runExceptT $ do
+        initSuccess <- liftIO GLFW.init
+        unless initSuccess $ throwError "GLFW initialization failed"
+
+        liftIO (GLFW.windowHint $ WindowHint'Resizable True)
+        liftIO (GLFW.windowHint $ WindowHint'Samples 8)
+        liftIO (GLFW.windowHint $ WindowHint'ContextVersionMajor (glVersionMajor configuration))
+        liftIO (GLFW.windowHint $ WindowHint'ContextVersionMinor (glVersionMinor configuration))
+        liftIO (GLFW.windowHint $ WindowHint'OpenGLForwardCompat True)
+        liftIO (GLFW.windowHint $ WindowHint'OpenGLProfile OpenGLProfile'Core)
+        liftIO (GLFW.windowHint $ WindowHint'OpenGLDebugContext (debugContext configuration))
+
+        case displayMode configuration of
+            FullScreen -> do
+                monitor' <- liftIO GLFW.getPrimaryMonitor
+                when (isNothing monitor') $
+                    throwError "Cannot get hold of primary monitor"
+                let Just monitor = monitor'
+
+                mode' <- liftIO $ GLFW.getVideoMode monitor
+                when (isNothing mode') $
+                    throwError "Cannot get hold of monitor's video mode"
+
+                let Just mode = mode'
+                    width = videoModeWidth mode
+                    height = videoModeHeight mode
+
+                win' <- liftIO $
+                    GLFW.createWindow width height (caption configuration) (Just monitor) Nothing
+
+                when (isNothing win') $
+                    throwError "Cannot create fullscreen window"
+                let Just win = win'
+
+                return (win, width, height)
+
+            Windowed width height -> do
+                win' <- liftIO $
+                    GLFW.createWindow width height (caption configuration) Nothing Nothing
+                when (isNothing win') $
+                    throwError "Cannot created windowed window"
+
+                let Just win = win'
+
+                return (win, width, height)
