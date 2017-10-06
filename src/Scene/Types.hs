@@ -20,7 +20,7 @@ import           GHC.Generics    (Generic)
 -- | Events that are emitted from the renderer.
 data Event
     = CloseRequest
-    deriving (Generic, NFData, Show)
+    deriving (Eq, Generic, NFData, Show)
 
 -- | The state which the renderer can hold. It is always the application thread
 -- that will change the 'RenderState'.
@@ -29,4 +29,4 @@ data RenderState
     | Running
     | Closing
     | Done
-    deriving (Generic, NFData, Show)
+    deriving (Eq, Generic, NFData, Show)

@@ -24,14 +24,14 @@ import           Scene.Types              (Event, RenderState)
 -- | The viewer record is a handle from the application to the runtime of
 -- the viewer library. To the user the record is opaque.
 data Viewer = Viewer
-    { renderThread :: !(Async ())
-    , renderState  :: !(TVar RenderState)
-    , eventQueue   :: !(TQueue Event)
+    { thread      :: !(Async ())
+    , renderState :: !(TVar RenderState)
+    , eventQueue  :: !(TQueue Event)
     }
 
 -- | Wait until the render thread has terminated.
 waitOnTermination :: Viewer -> IO ()
-waitOnTermination = wait . renderThread
+waitOnTermination = wait . thread
 
 -- | Set a new 'RenderState' value. Make sure the value is fully evaluated
 -- in the calling thread.

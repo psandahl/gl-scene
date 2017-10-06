@@ -1,3 +1,4 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 -- |
 -- Module: Scene.Kernel
 -- Copyright: (c) 2017 Patrik Sandahl
@@ -12,14 +13,20 @@ module Scene.Kernel
     , viewScenes
     ) where
 
-import           Control.Monad          (unless, when)
-import           Control.Monad.Except   (runExceptT, throwError)
-import           Control.Monad.IO.Class (liftIO)
-import           Data.Maybe             (isNothing)
-import           Graphics.UI.GLFW       (Window)
-import           Graphics.UI.GLFW       as GLFW
-import           Scene.Types            (Event (..))
-import           Scene.Viewer           (Viewer (..))
+import           Control.Concurrent.Async (asyncBound)
+import           Control.Concurrent.STM   (newTQueueIO, newTQueueIO, newTVarIO)
+import           Control.Monad            (unless, when)
+import           Control.Monad.Except     (runExceptT, throwError)
+import           Control.Monad.IO.Class   (liftIO)
+import           Data.Maybe               (isNothing)
+import qualified Graphics.GL              as GL
+import           Graphics.UI.GLFW         (Window)
+import           Graphics.UI.GLFW         as GLFW
+import           Scene.Runtime            (Runtime)
+import qualified Scene.Runtime            as Runtime
+import           Scene.Types              (Event (..), RenderState (..))
+import           Scene.Viewer             (Viewer)
+import qualified Scene.Viewer             as Viewer
 
 -- | Configuration data for the 'Viewer' window to create.
 data Configuration = Configuration
@@ -61,8 +68,66 @@ viewScenes :: Configuration
 viewScenes configuration onInit onEvent onExit = do
     result <- makeWindow configuration
     case result of
-        Right (window, width, height) -> undefined
+        -- GL context is created. Start everything up.
+        Right (window, _width, _height) -> do
+
+            -- Create the shared data between the renderer and the application.
+            renderState <- newTVarIO Initializing
+            eventQueue  <- newTQueueIO
+
+            -- Start the render thread.
+            thread <- asyncBound $
+                renderThread
+                    Runtime.Runtime
+                        { Runtime.window = window
+                        , Runtime.renderState = renderState
+                        , Runtime.eventQueue = eventQueue
+                        }
+
+            -- Continue with application thread in the current thread.
+            applicationThread onInit onEvent onExit
+                Viewer.Viewer
+                    { Viewer.thread = thread
+                    , Viewer.renderState = renderState
+                    , Viewer.eventQueue = eventQueue
+                    }
+            return $ Right ()
+
+        -- Cannot create a GL context.
         Left err                      -> return $ Left err
+
+renderThread :: Runtime -> IO ()
+renderThread runtime = do
+    GLFW.makeContextCurrent (Just $ Runtime.window runtime)
+    GL.glClearColor 0.5 0.5 0.5 1
+    renderLoop runtime
+    GLFW.terminate
+
+renderLoop :: Runtime -> IO ()
+renderLoop runtime = go
+    where
+        go :: IO ()
+        go = do
+            let window = Runtime.window runtime
+
+            GL.glClear GL.GL_COLOR_BUFFER_BIT
+            GLFW.swapBuffers window
+            GLFW.pollEvents
+
+            shallClose <- GLFW.windowShouldClose window
+            when shallClose $ do
+                Runtime.emitEvent runtime CloseRequest
+                GLFW.setWindowShouldClose window False
+
+            renderState <- Runtime.getRenderState runtime
+            unless (renderState == Done) go
+
+applicationThread :: (Viewer -> IO a)
+                  -> (Viewer -> Event -> a -> IO a)
+                  -> (Viewer -> a -> IO ())
+                  -> Viewer
+                  -> IO ()
+applicationThread = undefined
 
 -- | Do all the low level stuff to setup a GL context/GLFW window.
 makeWindow :: Configuration -> IO (Either String (Window, Int, Int))

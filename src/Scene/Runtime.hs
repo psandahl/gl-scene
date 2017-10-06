@@ -16,10 +16,12 @@ module Scene.Runtime
 import           Control.Concurrent.STM (TQueue, TVar, atomically, readTVarIO,
                                          writeTQueue)
 import           Control.DeepSeq        (($!!))
+import           Graphics.UI.GLFW       (Window)
 import           Scene.Types            (Event, RenderState)
 
 data Runtime = Runtime
-    { renderState :: !(TVar RenderState)
+    { window      :: !Window
+    , renderState :: !(TVar RenderState)
     , eventQueue  :: !(TQueue Event)
     }
 
