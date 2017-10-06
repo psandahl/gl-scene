@@ -1,3 +1,4 @@
+-- |
 -- Module: Scene.Kernel
 -- Copyright: (c) 2017 Patrik Sandahl
 -- Licence: MIT

@@ -1,3 +1,4 @@
+-- |
 -- Module: Scene
 -- Copyright: (c) 2017 Patrik Sandahl
 -- Licence: MIT
