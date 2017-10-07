@@ -5,6 +5,8 @@
 -- Maintainer: Patrik Sandahl <patrik.sandahl@gmail.com>
 -- Stability: experimental
 -- Portability: portable
+--
+-- The Kernel module is implementing all low level runtime stuff.
 module Scene.Kernel
     ( Configuration (..)
     , DisplayMode (..)
@@ -84,6 +86,7 @@ viewScenes configuration onInit onEvent onExit = do
                     Runtime.Runtime
                         { Runtime.window = window
                         , Runtime.viewport = viewport
+                        , Runtime.frameStart = 0
                         , Runtime.renderState = renderState
                         , Runtime.eventQueue = eventQueue
                         }
@@ -121,14 +124,24 @@ renderThread runtime = do
 
 -- | The render loop, running in the render thread.
 renderLoop :: Runtime -> IO ()
-renderLoop runtime = go
+renderLoop = go
     where
-        go :: IO ()
-        go = do
-            let window = Runtime.window runtime
+        go :: Runtime -> IO ()
+        go runtime = do
+            Just now <- GLFW.getTime
+            renderState <- Runtime.getRenderState runtime
 
-            -- Render the scene.
+            -- If the 'RenderState' is Running, emit a Frame event to the
+            -- application.
+            when (renderState == Running) $ do
+                let duration = now - Runtime.frameStart runtime
+                viewport <- Runtime.getViewport runtime
+                Runtime.emitEvent runtime $ Frame duration viewport
+
+            -- Render the current scene.
             GL.glClear GL.GL_COLOR_BUFFER_BIT
+
+            let window = Runtime.window runtime
 
             -- Swap buffers and make the scene visible.
             GLFW.swapBuffers window
@@ -144,11 +157,9 @@ renderLoop runtime = go
                 -- And reset the close flag.
                 GLFW.setWindowShouldClose window False
 
-            renderState <- Runtime.getRenderState runtime
-
             -- If the 'RenderState' is set to Done we close. Otherwise just
             -- go on.
-            unless (renderState == Done) go
+            unless (renderState == Done) $ go runtime { Runtime.frameStart = now }
 
 -- | Entry for the application thread. When we enter the function the
 -- 'RenderState' is Initializing.

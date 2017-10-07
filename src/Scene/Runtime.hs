@@ -25,6 +25,7 @@ import           Scene.Types            (Event, RenderState, Viewport)
 data Runtime = Runtime
     { window      :: !Window
     , viewport    :: !(IORef Viewport)
+    , frameStart  :: !Double
     , renderState :: !(TVar RenderState)
     , eventQueue  :: !(TQueue Event)
     }

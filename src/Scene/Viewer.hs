@@ -49,8 +49,10 @@ setRenderState viewer renderState' =
 -- | Get the current 'RenderState' value.
 getRenderState :: Viewer -> IO RenderState
 getRenderState = readTVarIO . renderState
+{-# INLINE getRenderState #-}
 
 -- | Get the next 'Event' from the queue.
 getNextEvent :: Viewer -> IO Event
 getNextEvent viewer =
     atomically $ readTQueue (eventQueue viewer)
+{-# INLINE getNextEvent #-}

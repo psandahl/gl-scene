@@ -21,6 +21,7 @@ import           GHC.Generics    (Generic)
 -- | Events that are emitted from the renderer.
 data Event
     = CloseRequest
+    | Frame !Double !Viewport
     deriving (Eq, Generic, NFData, Show)
 
 -- | The state which the renderer can hold. It is always the application thread
