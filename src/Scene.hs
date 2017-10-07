@@ -10,6 +10,7 @@ module Scene
     , DisplayMode (..)
     , Event (..)
     , Viewer
+    , Viewport (..)
     , defaultConfiguration
     , viewScenes
     , close
@@ -17,5 +18,5 @@ module Scene
 
 import           Scene.Kernel (Configuration (..), DisplayMode (..),
                                defaultConfiguration, viewScenes)
-import           Scene.Types  (Event (..))
+import           Scene.Types  (Event (..), Viewport (..))
 import           Scene.Viewer (Viewer, close)

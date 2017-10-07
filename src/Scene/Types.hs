@@ -12,6 +12,7 @@
 module Scene.Types
     ( Event (..)
     , RenderState (..)
+    , Viewport (..)
     ) where
 
 import           Control.DeepSeq (NFData)
@@ -30,3 +31,9 @@ data RenderState
     | Closing
     | Done
     deriving (Eq, Generic, NFData, Show)
+
+-- | The viewport size.
+data Viewport = Viewport
+    { width  :: !Int
+    , height :: !Int
+    } deriving (Eq, Generic, NFData, Show)

@@ -1,4 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 -- |
 -- Module: Scene.Kernel
 -- Copyright: (c) 2017 Patrik Sandahl
@@ -18,13 +17,16 @@ import           Control.Concurrent.STM   (newTQueueIO, newTQueueIO, newTVarIO)
 import           Control.Monad            (unless, when)
 import           Control.Monad.Except     (runExceptT, throwError)
 import           Control.Monad.IO.Class   (liftIO)
+import           Data.IORef               (newIORef)
 import           Data.Maybe               (isNothing)
 import qualified Graphics.GL              as GL
 import           Graphics.UI.GLFW         (Window)
 import           Graphics.UI.GLFW         as GLFW
+import           Scene.Callback           (subscribeToMandatoryCallbacks)
 import           Scene.Runtime            (Runtime)
 import qualified Scene.Runtime            as Runtime
-import           Scene.Types              (Event (..), RenderState (..))
+import           Scene.Types              (Event (..), RenderState (..),
+                                           Viewport (..))
 import           Scene.Viewer             (Viewer)
 import qualified Scene.Viewer             as Viewer
 
@@ -69,17 +71,19 @@ viewScenes configuration onInit onEvent onExit = do
     result <- makeWindow configuration
     case result of
         -- GL context is created. Start everything up.
-        Right (window, _width, _height) -> do
+        Right (window, width', height') -> do
 
             -- Create the shared data between the renderer and the application.
             renderState <- newTVarIO Initializing
             eventQueue  <- newTQueueIO
 
             -- Start the render thread.
+            viewport <- newIORef Viewport { width = width', height = height' }
             thread <- asyncBound $
                 renderThread
                     Runtime.Runtime
                         { Runtime.window = window
+                        , Runtime.viewport = viewport
                         , Runtime.renderState = renderState
                         , Runtime.eventQueue = eventQueue
                         }
@@ -102,6 +106,9 @@ renderThread :: Runtime -> IO ()
 renderThread runtime = do
     -- Make the OpenGL context current for this thread.
     GLFW.makeContextCurrent (Just $ Runtime.window runtime)
+
+    -- Subscribe to mandatory callbacks.
+    subscribeToMandatoryCallbacks runtime
 
     -- Apply global settings.
     GL.glClearColor 0.5 0.5 0.5 1
@@ -209,24 +216,24 @@ makeWindow configuration =
                     throwError "Cannot get hold of monitor's video mode"
 
                 let Just mode = mode'
-                    width = videoModeWidth mode
-                    height = videoModeHeight mode
+                    width' = videoModeWidth mode
+                    height' = videoModeHeight mode
 
                 win' <- liftIO $
-                    GLFW.createWindow width height (caption configuration) (Just monitor) Nothing
+                    GLFW.createWindow width' height' (caption configuration) (Just monitor) Nothing
 
                 when (isNothing win') $
                     throwError "Cannot create fullscreen window"
                 let Just win = win'
 
-                return (win, width, height)
+                return (win, width', height')
 
-            Windowed width height -> do
+            Windowed width' height' -> do
                 win' <- liftIO $
-                    GLFW.createWindow width height (caption configuration) Nothing Nothing
+                    GLFW.createWindow width' height' (caption configuration) Nothing Nothing
                 when (isNothing win') $
                     throwError "Cannot created windowed window"
 
                 let Just win = win'
 
-                return (win, width, height)
+                return (win, width', height')

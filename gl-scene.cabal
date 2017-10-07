@@ -16,7 +16,8 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Scene
-  other-modules:       Scene.Kernel
+  other-modules:       Scene.Callback
+                       Scene.Kernel
                        Scene.Runtime
                        Scene.Types
                        Scene.Viewer
