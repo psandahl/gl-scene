@@ -87,7 +87,7 @@ viewScenes configuration onInit onEvent onExit = do
             -- Continue with application thread in the current thread.
             applicationThread onInit onEvent onExit
                 Viewer.Viewer
-                    { Viewer.thread = thread
+                    { Viewer.renderThread = thread
                     , Viewer.renderState = renderState
                     , Viewer.eventQueue = eventQueue
                     }
@@ -96,13 +96,23 @@ viewScenes configuration onInit onEvent onExit = do
         -- Cannot create a GL context.
         Left err                      -> return $ Left err
 
+-- | Entry for the renderering thread. This must run in a bound thread due
+-- to OpenGL using thread local storage.
 renderThread :: Runtime -> IO ()
 renderThread runtime = do
+    -- Make the OpenGL context current for this thread.
     GLFW.makeContextCurrent (Just $ Runtime.window runtime)
+
+    -- Apply global settings.
     GL.glClearColor 0.5 0.5 0.5 1
+
+    -- Run the render loop until 'RenderState' value Done is reached.
     renderLoop runtime
+
+    -- Terminate OpenGL, and then just return back.
     GLFW.terminate
 
+-- | The render loop, running in the render thread.
 renderLoop :: Runtime -> IO ()
 renderLoop runtime = go
     where
@@ -110,24 +120,67 @@ renderLoop runtime = go
         go = do
             let window = Runtime.window runtime
 
+            -- Render the scene.
             GL.glClear GL.GL_COLOR_BUFFER_BIT
+
+            -- Swap buffers and make the scene visible.
             GLFW.swapBuffers window
+
+            -- Poll event and run callbacks.
             GLFW.pollEvents
 
+            -- Is the window close flag set?
             shallClose <- GLFW.windowShouldClose window
             when shallClose $ do
+                -- If so, signal to application with a CloseRequest.
                 Runtime.emitEvent runtime CloseRequest
+                -- And reset the close flag.
                 GLFW.setWindowShouldClose window False
 
             renderState <- Runtime.getRenderState runtime
+
+            -- If the 'RenderState' is set to Done we close. Otherwise just
+            -- go on.
             unless (renderState == Done) go
 
+-- | Entry for the application thread. When we enter the function the
+-- 'RenderState' is Initializing.
 applicationThread :: (Viewer -> IO a)
                   -> (Viewer -> Event -> a -> IO a)
                   -> (Viewer -> a -> IO ())
                   -> Viewer
                   -> IO ()
-applicationThread = undefined
+applicationThread onInit onEvent onExit viewer = do
+    -- Let the application initialize itself.
+    app <- onInit viewer
+
+    -- Enter running state, and wait until the application chose to enter
+    -- Closing state.
+    Viewer.setRenderState viewer Running
+    app' <- go app
+
+    -- Let the application clean up stuff.
+    onExit viewer app'
+
+    -- Set the 'RenderState' to Done.
+    Viewer.setRenderState viewer Done
+
+    -- And, finally, wait for the render thread to terminate.
+    Viewer.waitOnTermination viewer
+    where
+        go app = do
+            -- Wait for the next 'Event.'
+            event <- Viewer.getNextEvent viewer
+
+            -- Feed it to the application.
+            app' <- onEvent viewer event app
+
+            -- Check 'RenderState'. End this loop if the application
+            -- has requested a close.
+            renderState <- Viewer.getRenderState viewer
+            if renderState /= Closing
+                then go app'
+                else return app'
 
 -- | Do all the low level stuff to setup a GL context/GLFW window.
 makeWindow :: Configuration -> IO (Either String (Window, Int, Int))

@@ -12,9 +12,10 @@ module Scene
     , Viewer
     , defaultConfiguration
     , viewScenes
+    , close
     ) where
 
 import           Scene.Kernel (Configuration (..), DisplayMode (..),
                                defaultConfiguration, viewScenes)
 import           Scene.Types  (Event (..))
-import           Scene.Viewer (Viewer)
+import           Scene.Viewer (Viewer, close)
