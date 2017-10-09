@@ -57,10 +57,9 @@ programFromFiles viewer request = do
 -- | Load a program from 'ByteString's.
 programFromByteStrings :: Viewer -> ProgramRequest ByteString
                        -> IO (Either String Program)
-programFromByteStrings viewer request =
-    atomically $ do
-        writeTQueue (programRequest viewer) $!! request
-        readTQueue (programReply viewer)
+programFromByteStrings viewer request = do
+    atomically $ writeTQueue (programRequest viewer) $!! request
+    atomically $ readTQueue (programReply viewer)
 
 -- | Wait until the render thread has terminated.
 waitOnTermination :: Viewer -> IO ()
