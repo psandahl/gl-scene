@@ -16,7 +16,7 @@ module Scene
     , close
     ) where
 
-import           Scene.Kernel (Configuration (..), DisplayMode (..),
-                               defaultConfiguration, viewScenes)
-import           Scene.Types  (Event (..), Viewport (..))
+import           Scene.Kernel (Configuration (..), defaultConfiguration,
+                               viewScenes)
+import           Scene.Types  (DisplayMode (..), Event (..), Viewport (..))
 import           Scene.Viewer (Viewer, close)

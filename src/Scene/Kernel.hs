@@ -9,7 +9,6 @@
 -- The Kernel module is implementing all low level runtime stuff.
 module Scene.Kernel
     ( Configuration (..)
-    , DisplayMode (..)
     , defaultConfiguration
     , viewScenes
     ) where
@@ -27,8 +26,8 @@ import           Graphics.UI.GLFW         as GLFW
 import           Scene.Callback           (subscribeToMandatoryCallbacks)
 import           Scene.Runtime            (Runtime)
 import qualified Scene.Runtime            as Runtime
-import           Scene.Types              (Event (..), RenderState (..),
-                                           Viewport (..))
+import           Scene.Types              (DisplayMode (..), Event (..),
+                                           RenderState (..), Viewport (..))
 import           Scene.Viewer             (Viewer)
 import qualified Scene.Viewer             as Viewer
 
@@ -40,12 +39,6 @@ data Configuration = Configuration
     , displayMode    :: !DisplayMode
     , debugContext   :: !Bool
     } deriving Show
-
--- | Display mode for the 'Viewer' window.
-data DisplayMode
-    = FullScreen
-    | Windowed !Int !Int
-    deriving Show
 
 -- | Default 'Configuration'.
 defaultConfiguration :: Configuration

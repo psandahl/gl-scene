@@ -10,13 +10,20 @@
 --
 -- Basic types.
 module Scene.Types
-    ( Event (..)
+    ( DisplayMode (..)
+    , Event (..)
     , RenderState (..)
     , Viewport (..)
     ) where
 
 import           Control.DeepSeq (NFData)
 import           GHC.Generics    (Generic)
+
+-- | Display mode for the 'Viewer' window.
+data DisplayMode
+    = FullScreen
+    | Windowed !Int !Int
+    deriving Show
 
 -- | Events that are emitted from the renderer.
 data Event
