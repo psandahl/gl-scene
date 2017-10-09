@@ -11,6 +11,8 @@
 module Scene.Viewer
     ( Viewer (..)
     , close
+    , programFromFiles
+    , programFromByteStrings
     , waitOnTermination
     , setRenderState
     , getRenderState
@@ -19,22 +21,46 @@ module Scene.Viewer
 
 import           Control.Concurrent.Async (Async, wait)
 import           Control.Concurrent.STM   (TQueue, TVar, atomically, readTQueue,
-                                           readTVarIO, writeTVar)
+                                           readTVarIO, writeTQueue, writeTVar)
 import           Control.DeepSeq          (($!!))
+import           Data.ByteString.Char8    (ByteString)
+import           Scene.GL.Program         (Program, ProgramRequest, readSources)
 import           Scene.Types              (Event, RenderState (..))
 
 -- | The viewer record is a handle from the application to the runtime of
 -- the viewer library. To the user the record is opaque.
 data Viewer = Viewer
-    { renderThread :: !(Async ())
-    , renderState  :: !(TVar RenderState)
-    , eventQueue   :: !(TQueue Event)
+    { renderThread   :: !(Async ())
+    , renderState    :: !(TVar RenderState)
+    , eventQueue     :: !(TQueue Event)
+    , programRequest :: !(TQueue (ProgramRequest ByteString))
+    , programReply   :: !(TQueue (Either String Program))
     }
 
 -- | Request the renderer to close. This state change is unconditional, when
 -- the application call this the application will stop. Period.
 close :: Viewer -> IO ()
 close viewer = setRenderState viewer Closing
+
+-- | Load a program from source files. All file i/o is performed in the
+-- application thread.
+programFromFiles :: Viewer -> ProgramRequest FilePath
+                 -> IO (Either String Program)
+programFromFiles viewer request = do
+    result <- readSources request
+    case result of
+        Right newRequest ->
+            programFromByteStrings viewer newRequest
+
+        Left err         -> return $ Left err
+
+-- | Load a program from 'ByteString's.
+programFromByteStrings :: Viewer -> ProgramRequest ByteString
+                       -> IO (Either String Program)
+programFromByteStrings viewer request =
+    atomically $ do
+        writeTQueue (programRequest viewer) $!! request
+        readTQueue (programReply viewer)
 
 -- | Wait until the render thread has terminated.
 waitOnTermination :: Viewer -> IO ()

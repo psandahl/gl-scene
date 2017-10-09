@@ -9,6 +9,9 @@ module Scene
     ( Configuration (..)
     , DisplayMode (..)
     , Event (..)
+    , Program
+    , ProgramRequest (..)
+    , ShaderType (..)
     , Uniform (..)
     , UniformValue (..)
     , Viewer
@@ -16,10 +19,15 @@ module Scene
     , defaultConfiguration
     , viewScenes
     , close
+    , programFromFiles
+    , programFromByteStrings
     ) where
 
+import           Scene.GL.Program (Program, ProgramRequest (..),
+                                   ShaderType (..))
 import           Scene.GL.Uniform (Uniform (..), UniformValue (..))
 import           Scene.Kernel     (Configuration (..), defaultConfiguration,
                                    viewScenes)
 import           Scene.Types      (DisplayMode (..), Event (..), Viewport (..))
-import           Scene.Viewer     (Viewer, close)
+import           Scene.Viewer     (Viewer, close, programFromByteStrings,
+                                   programFromFiles)

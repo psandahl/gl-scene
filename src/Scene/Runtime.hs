@@ -13,21 +13,28 @@ module Scene.Runtime
     , setViewport
     , getRenderState
     , emitEvent
+    , scanRequests
     ) where
 
 import           Control.Concurrent.STM (TQueue, TVar, atomically, readTVarIO,
-                                         writeTQueue)
+                                         tryReadTQueue, writeTQueue)
 import           Control.DeepSeq        (($!!))
+import           Data.ByteString.Char8  (ByteString)
 import           Data.IORef             (IORef, readIORef, writeIORef)
+import           Flow                   ((<|))
 import           Graphics.UI.GLFW       (Window)
+import           Scene.GL.Program       (Program, ProgramRequest)
+import qualified Scene.GL.Program       as Program
 import           Scene.Types            (Event, RenderState, Viewport)
 
 data Runtime = Runtime
-    { window      :: !Window
-    , viewport    :: !(IORef Viewport)
-    , frameStart  :: !Double
-    , renderState :: !(TVar RenderState)
-    , eventQueue  :: !(TQueue Event)
+    { window         :: !Window
+    , viewport       :: !(IORef Viewport)
+    , frameStart     :: !Double
+    , renderState    :: !(TVar RenderState)
+    , eventQueue     :: !(TQueue Event)
+    , programRequest :: !(TQueue (ProgramRequest ByteString))
+    , programReply   :: !(TQueue (Either String Program))
     }
 
 -- | Get the 'Viewport' value.
@@ -51,3 +58,14 @@ emitEvent :: Runtime -> Event -> IO ()
 emitEvent runtime event =
     atomically $ writeTQueue (eventQueue runtime) $!! event
 {-# INLINE emitEvent #-}
+
+-- | Scan all the request queues, and handle one request per queue.
+scanRequests :: Runtime -> IO ()
+scanRequests runtime =
+    maybe (return ()) (handleProgramRequest runtime) =<<
+        (atomically <| tryReadTQueue (programRequest runtime))
+
+handleProgramRequest :: Runtime -> ProgramRequest ByteString -> IO ()
+handleProgramRequest runtime request = do
+    result <- Program.fromRequest request
+    atomically $ writeTQueue (programReply runtime) $!! result

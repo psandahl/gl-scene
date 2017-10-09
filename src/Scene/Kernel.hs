@@ -71,6 +71,8 @@ viewScenes configuration onInit onEvent onExit = do
             -- Create the shared data between the renderer and the application.
             renderState <- newTVarIO Initializing
             eventQueue  <- newTQueueIO
+            programRequest <- newTQueueIO
+            programReply <- newTQueueIO
 
             -- Start the render thread.
             viewport <- newIORef Viewport { width = width', height = height' }
@@ -82,6 +84,8 @@ viewScenes configuration onInit onEvent onExit = do
                         , Runtime.frameStart = 0
                         , Runtime.renderState = renderState
                         , Runtime.eventQueue = eventQueue
+                        , Runtime.programRequest = programRequest
+                        , Runtime.programReply = programReply
                         }
 
             -- Continue with application thread in the current thread.
@@ -90,6 +94,8 @@ viewScenes configuration onInit onEvent onExit = do
                     { Viewer.renderThread = thread
                     , Viewer.renderState = renderState
                     , Viewer.eventQueue = eventQueue
+                    , Viewer.programRequest = programRequest
+                    , Viewer.programReply = programReply
                     }
             return $ Right ()
 
@@ -121,6 +127,9 @@ renderLoop = go
     where
         go :: Runtime -> IO ()
         go runtime = do
+            -- Start by scanning the request queues.
+            Runtime.scanRequests runtime
+
             Just now <- GLFW.getTime
             renderState <- Runtime.getRenderState runtime
 
