@@ -9,6 +9,8 @@ module Scene
     ( Configuration (..)
     , DisplayMode (..)
     , Event (..)
+    , Uniform (..)
+    , UniformValue (..)
     , Viewer
     , Viewport (..)
     , defaultConfiguration
@@ -16,7 +18,8 @@ module Scene
     , close
     ) where
 
-import           Scene.Kernel (Configuration (..), defaultConfiguration,
-                               viewScenes)
-import           Scene.Types  (DisplayMode (..), Event (..), Viewport (..))
-import           Scene.Viewer (Viewer, close)
+import           Scene.GL.Uniform (Uniform (..), UniformValue (..))
+import           Scene.Kernel     (Configuration (..), defaultConfiguration,
+                                   viewScenes)
+import           Scene.Types      (DisplayMode (..), Event (..), Viewport (..))
+import           Scene.Viewer     (Viewer, close)

@@ -20,16 +20,19 @@ import           Control.Exception     (SomeException, try)
 import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as BS
 import           Data.Text             (Text)
+import           Flow                  ((<|))
 import           Foreign               (Ptr, nullPtr, peek, with)
 import           Foreign.C             (peekCString, withCString)
 import           GHC.Generics          (Generic)
 import qualified Graphics.GL           as GL
 import           Scene.GL.Types        (ToGLenum (..))
+import           Scene.GL.Uniform      (UniformLocationMap, getUniformLocations)
 import           Text.Printf           (printf)
 
 -- | A representation of a program. The 'Program' type is opaque to the user.
 data Program = Program
-    { programId :: !ProgramId
+    { programId        :: !ProgramId
+    , uniformLocations :: !UniformLocationMap
     } deriving (Generic, NFData, Show)
 
 -- | A request for a 'Program' by specifying the program's shaders and the
@@ -66,10 +69,13 @@ fromRequest :: ProgramRequest ByteString -> IO (Either String Program)
 fromRequest request = do
     eProgram <- fromByteStrings $ shaders request
     case eProgram of
-        Right program ->
+
+        Right program -> do
+            uniformLocations' <- getUniformLocations program <| uniformNames request
             return $ Right
                 Program
                     { programId = program
+                    , uniformLocations = uniformLocations'
                     }
 
         Left err -> return $ Left err
