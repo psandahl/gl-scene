@@ -21,6 +21,7 @@ library
                        Scene.Runtime
                        Scene.Types
                        Scene.Viewer
+                       Scene.GL.Action
                        Scene.GL.Program
                        Scene.GL.Resource
                        Scene.GL.Types
