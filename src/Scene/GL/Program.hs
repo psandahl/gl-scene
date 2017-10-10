@@ -13,6 +13,9 @@ module Scene.GL.Program
     , ShaderType (..)
     , readSources
     , fromRequest
+    , enable
+    , disable
+    , delete
     ) where
 
 import           Control.DeepSeq       (NFData)
@@ -79,6 +82,18 @@ fromRequest request = do
                     }
 
         Left err -> return $ Left err
+
+-- | Enable the program.
+enable :: Program -> IO ()
+enable = GL.glUseProgram . programId
+
+-- | Disable the currently active program.
+disable :: IO ()
+disable = GL.glUseProgram 0
+
+-- | Delete the program.
+delete :: Program -> IO ()
+delete = GL.glDeleteProgram . programId
 
 -- | Build a shader program from bytestrings.
 fromByteStrings :: [(ShaderType, ByteString)] -> IO (Either String GL.GLuint)
