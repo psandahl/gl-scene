@@ -24,6 +24,7 @@ import qualified Graphics.GL              as GL
 import           Graphics.UI.GLFW         (Window)
 import           Graphics.UI.GLFW         as GLFW
 import           Scene.Callback           (subscribeToMandatoryCallbacks)
+import           Scene.GL.Action          (Action, applyPersistantActions)
 import           Scene.Runtime            (Runtime)
 import qualified Scene.Runtime            as Runtime
 import           Scene.Types              (DisplayMode (..), Event (..),
@@ -37,6 +38,7 @@ data Configuration = Configuration
     , glVersionMajor :: !Int
     , glVersionMinor :: !Int
     , displayMode    :: !DisplayMode
+    , actions        :: ![Action]
     , debugContext   :: !Bool
     } deriving Show
 
@@ -48,6 +50,7 @@ defaultConfiguration =
         , glVersionMajor = 3
         , glVersionMinor = 3
         , displayMode = Windowed 1024 768
+        , actions = []
         , debugContext = True
         }
 
@@ -77,7 +80,7 @@ viewScenes configuration onInit onEvent onExit = do
             -- Start the render thread.
             viewport <- newIORef Viewport { width = width', height = height' }
             thread <- asyncBound $
-                renderThread
+                renderThread (actions configuration)
                     Runtime.Runtime
                         { Runtime.window = window
                         , Runtime.viewport = viewport
@@ -104,16 +107,16 @@ viewScenes configuration onInit onEvent onExit = do
 
 -- | Entry for the renderering thread. This must run in a bound thread due
 -- to OpenGL using thread local storage.
-renderThread :: Runtime -> IO ()
-renderThread runtime = do
+renderThread :: [Action] -> Runtime -> IO ()
+renderThread globalActions runtime = do
     -- Make the OpenGL context current for this thread.
     GLFW.makeContextCurrent (Just $ Runtime.window runtime)
 
     -- Subscribe to mandatory callbacks.
     subscribeToMandatoryCallbacks runtime
 
-    -- Apply global settings.
-    GL.glClearColor 0.5 0.5 0.5 1
+    -- Apply global, persistant, actions.
+    applyPersistantActions globalActions
 
     -- Run the render loop until 'RenderState' value Done is reached.
     renderLoop runtime

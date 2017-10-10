@@ -6,7 +6,8 @@
 -- Stability: experimental
 -- Portability: portable
 module Scene
-    ( Configuration (..)
+    ( Action (..)
+    , Configuration (..)
     , DisplayMode (..)
     , Event (..)
     , Program
@@ -23,6 +24,7 @@ module Scene
     , programFromByteStrings
     ) where
 
+import           Scene.GL.Action  (Action (..))
 import           Scene.GL.Program (Program, ProgramRequest (..),
                                    ShaderType (..))
 import           Scene.GL.Uniform (Uniform (..), UniformValue (..))
