@@ -8,6 +8,7 @@
 module Scene
     ( Action (..)
     , BufferBit (..)
+    , Capability (..)
     , Configuration (..)
     , DisplayMode (..)
     , Event (..)
@@ -26,7 +27,7 @@ module Scene
     , programFromByteStrings
     ) where
 
-import           Scene.GL.Action  (Action (..), BufferBit (..))
+import           Scene.GL.Action  (Action (..), BufferBit (..), Capability (..))
 import           Scene.GL.Program (Program, ProgramRequest (..),
                                    ShaderType (..))
 import           Scene.GL.Uniform (Uniform (..), UniformValue (..))
