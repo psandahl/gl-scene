@@ -11,18 +11,34 @@
 -- The Action module provides GL actions to manipulate the GL state machine.
 module Scene.GL.Action
     ( Action (..)
+    , BufferBit (..)
     , applyPersistantActions
     , withTemporaryActions
     ) where
 
 import           Control.DeepSeq (NFData)
+import           Data.Bits       ((.|.))
+import           Data.List       (foldl')
+import           Flow            ((<|))
 import           GHC.Generics    (Generic)
 import qualified Graphics.GL     as GL
+import           Scene.GL.Types  (ToGLbitfield (..))
 
 -- | Actions are used to manipulate the GL state machine.
 data Action
     = ClearColor !GL.GLfloat !GL.GLfloat !GL.GLfloat !GL.GLfloat
+    | Clear ![BufferBit]
     deriving (Generic, NFData, Show)
+
+-- | Buffer bits.
+data BufferBit
+    = ColorBufferBit
+    | DepthBufferBit
+    deriving (Generic, NFData, Show)
+
+instance ToGLbitfield BufferBit where
+    toGLbitfield ColorBufferBit = GL.GL_COLOR_BUFFER_BIT
+    toGLbitfield DepthBufferBit = GL.GL_DEPTH_BUFFER_BIT
 
 -- | Apply persistant actions. Shall only be used for global actions.
 applyPersistantActions :: [Action] -> IO ()
@@ -39,6 +55,7 @@ withTemporaryActions glActions ioAction = do
 
 applyActions :: [Action] -> IO ()
 applyActions = mapM_ applyAction
+{-# INLINE applyActions #-}
 
 applyAction :: Action -> IO ()
 applyAction action =
@@ -46,8 +63,12 @@ applyAction action =
         ClearColor r g b a ->
             GL.glClearColor r g b a
 
+        Clear bufferBits ->
+            GL.glClear <| concatBufferBits bufferBits
+
 runReverseActions :: [IO ()] -> IO ()
 runReverseActions = sequence_
+{-# INLINE runReverseActions #-}
 
 makeReverseActions :: [Action] -> IO [IO ()]
 makeReverseActions = mapM makeReverseAction
@@ -58,5 +79,12 @@ makeReverseAction action =
         ClearColor {} ->
             return emptyReverseAction
 
+        Clear {} ->
+            return emptyReverseAction
+
 emptyReverseAction :: IO ()
 emptyReverseAction = return ()
+
+concatBufferBits :: [BufferBit] -> GL.GLbitfield
+concatBufferBits = foldl' (\acc bit -> acc .|. toGLbitfield bit) 0
+{-# INLINE concatBufferBits #-}

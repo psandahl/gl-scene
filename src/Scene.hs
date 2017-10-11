@@ -7,6 +7,7 @@
 -- Portability: portable
 module Scene
     ( Action (..)
+    , BufferBit (..)
     , Configuration (..)
     , DisplayMode (..)
     , Event (..)
@@ -25,7 +26,7 @@ module Scene
     , programFromByteStrings
     ) where
 
-import           Scene.GL.Action  (Action (..))
+import           Scene.GL.Action  (Action (..), BufferBit (..))
 import           Scene.GL.Program (Program, ProgramRequest (..),
                                    ShaderType (..))
 import           Scene.GL.Uniform (Uniform (..), UniformValue (..))
