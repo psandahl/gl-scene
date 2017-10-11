@@ -12,6 +12,7 @@ module Scene
     , Event (..)
     , Program
     , ProgramRequest (..)
+    , Scene (..)
     , ShaderType (..)
     , Uniform (..)
     , UniformValue (..)
@@ -30,6 +31,7 @@ import           Scene.GL.Program (Program, ProgramRequest (..),
 import           Scene.GL.Uniform (Uniform (..), UniformValue (..))
 import           Scene.Kernel     (Configuration (..), defaultConfiguration,
                                    viewScenes)
+import           Scene.Scene      (Scene (..))
 import           Scene.Types      (DisplayMode (..), Event (..), Viewport (..))
 import           Scene.Viewer     (Viewer, close, programFromByteStrings,
                                    programFromFiles)

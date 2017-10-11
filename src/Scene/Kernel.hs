@@ -15,18 +15,20 @@ module Scene.Kernel
 
 import           Control.Concurrent.Async (asyncBound)
 import           Control.Concurrent.STM   (newTQueueIO, newTQueueIO, newTVarIO)
+import           Control.DeepSeq          (($!!))
 import           Control.Monad            (unless, when)
 import           Control.Monad.Except     (runExceptT, throwError)
 import           Control.Monad.IO.Class   (liftIO)
 import           Data.IORef               (newIORef)
 import           Data.Maybe               (isNothing)
-import qualified Graphics.GL              as GL
 import           Graphics.UI.GLFW         (Window)
 import           Graphics.UI.GLFW         as GLFW
 import           Scene.Callback           (subscribeToMandatoryCallbacks)
 import           Scene.GL.Action          (Action, applyPersistantActions)
 import           Scene.Runtime            (Runtime)
 import qualified Scene.Runtime            as Runtime
+import           Scene.Scene              (Scene (..))
+import qualified Scene.Scene              as Scene
 import           Scene.Types              (DisplayMode (..), Event (..),
                                            RenderState (..), Viewport (..))
 import           Scene.Viewer             (Viewer)
@@ -38,7 +40,8 @@ data Configuration = Configuration
     , glVersionMajor :: !Int
     , glVersionMinor :: !Int
     , displayMode    :: !DisplayMode
-    , actions        :: ![Action]
+    , globalActions  :: ![Action]
+    , initialScene   :: !Scene
     , debugContext   :: !Bool
     } deriving Show
 
@@ -50,7 +53,8 @@ defaultConfiguration =
         , glVersionMajor = 3
         , glVersionMinor = 3
         , displayMode = Windowed 1024 768
-        , actions = []
+        , globalActions = []
+        , initialScene = Scene { actions = [] }
         , debugContext = True
         }
 
@@ -72,7 +76,8 @@ viewScenes configuration onInit onEvent onExit = do
         Right (window, width', height') -> do
 
             -- Create the shared data between the renderer and the application.
-            renderState <- newTVarIO Initializing
+            currentScene <- newTVarIO $!! initialScene configuration
+            renderState <- newTVarIO $!! Initializing
             eventQueue  <- newTQueueIO
             programRequest <- newTQueueIO
             programReply <- newTQueueIO
@@ -80,11 +85,12 @@ viewScenes configuration onInit onEvent onExit = do
             -- Start the render thread.
             viewport <- newIORef Viewport { width = width', height = height' }
             thread <- asyncBound $
-                renderThread (actions configuration)
+                renderThread (globalActions configuration)
                     Runtime.Runtime
                         { Runtime.window = window
                         , Runtime.viewport = viewport
                         , Runtime.frameStart = 0
+                        , Runtime.currentScene = currentScene
                         , Runtime.renderState = renderState
                         , Runtime.eventQueue = eventQueue
                         , Runtime.programRequest = programRequest
@@ -95,6 +101,7 @@ viewScenes configuration onInit onEvent onExit = do
             applicationThread onInit onEvent onExit
                 Viewer.Viewer
                     { Viewer.renderThread = thread
+                    , Viewer.currentScene = currentScene
                     , Viewer.renderState = renderState
                     , Viewer.eventQueue = eventQueue
                     , Viewer.programRequest = programRequest
@@ -108,7 +115,7 @@ viewScenes configuration onInit onEvent onExit = do
 -- | Entry for the renderering thread. This must run in a bound thread due
 -- to OpenGL using thread local storage.
 renderThread :: [Action] -> Runtime -> IO ()
-renderThread globalActions runtime = do
+renderThread globalActions' runtime = do
     -- Make the OpenGL context current for this thread.
     GLFW.makeContextCurrent (Just $ Runtime.window runtime)
 
@@ -116,7 +123,7 @@ renderThread globalActions runtime = do
     subscribeToMandatoryCallbacks runtime
 
     -- Apply global, persistant, actions.
-    applyPersistantActions globalActions
+    applyPersistantActions globalActions'
 
     -- Run the render loop until 'RenderState' value Done is reached.
     renderLoop runtime
@@ -144,7 +151,7 @@ renderLoop = go
                 Runtime.emitEvent runtime $ Frame duration viewport
 
             -- Render the current scene.
-            GL.glClear GL.GL_COLOR_BUFFER_BIT
+            Scene.render =<< Runtime.getCurrentScene runtime
 
             let window = Runtime.window runtime
 

@@ -14,6 +14,7 @@ module Scene.Viewer
     , programFromFiles
     , programFromByteStrings
     , waitOnTermination
+    , setCurrentScene
     , setRenderState
     , getRenderState
     , getNextEvent
@@ -24,13 +25,16 @@ import           Control.Concurrent.STM   (TQueue, TVar, atomically, readTQueue,
                                            readTVarIO, writeTQueue, writeTVar)
 import           Control.DeepSeq          (($!!))
 import           Data.ByteString.Char8    (ByteString)
+import           Flow                     ((<|))
 import           Scene.GL.Program         (Program, ProgramRequest, readSources)
+import           Scene.Scene              (Scene)
 import           Scene.Types              (Event, RenderState (..))
 
 -- | The viewer record is a handle from the application to the runtime of
 -- the viewer library. To the user the record is opaque.
 data Viewer = Viewer
     { renderThread   :: !(Async ())
+    , currentScene   :: !(TVar Scene)
     , renderState    :: !(TVar RenderState)
     , eventQueue     :: !(TQueue Event)
     , programRequest :: !(TQueue (ProgramRequest ByteString))
@@ -41,6 +45,12 @@ data Viewer = Viewer
 -- the application call this the application will stop. Period.
 close :: Viewer -> IO ()
 close viewer = setRenderState viewer Closing
+
+-- | Set a new 'Scene'.
+setCurrentScene :: Viewer -> Scene -> IO ()
+setCurrentScene viewer scene =
+    atomically <| writeTVar (currentScene viewer) $!! scene
+{-# INLINE setCurrentScene #-}
 
 -- | Load a program from source files. All file i/o is performed in the
 -- application thread.
@@ -58,8 +68,8 @@ programFromFiles viewer request = do
 programFromByteStrings :: Viewer -> ProgramRequest ByteString
                        -> IO (Either String Program)
 programFromByteStrings viewer request = do
-    atomically $ writeTQueue (programRequest viewer) $!! request
-    atomically $ readTQueue (programReply viewer)
+    atomically <| writeTQueue (programRequest viewer) $!! request
+    atomically <| readTQueue (programReply viewer)
 
 -- | Wait until the render thread has terminated.
 waitOnTermination :: Viewer -> IO ()
@@ -69,7 +79,8 @@ waitOnTermination = wait . renderThread
 -- in the calling thread.
 setRenderState :: Viewer -> RenderState -> IO ()
 setRenderState viewer renderState' =
-    atomically $ writeTVar (renderState viewer) $!! renderState'
+    atomically <| writeTVar (renderState viewer) $!! renderState'
+{-# INLINE setRenderState #-}
 
 -- | Get the current 'RenderState' value.
 getRenderState :: Viewer -> IO RenderState
@@ -79,5 +90,5 @@ getRenderState = readTVarIO . renderState
 -- | Get the next 'Event' from the queue.
 getNextEvent :: Viewer -> IO Event
 getNextEvent viewer =
-    atomically $ readTQueue (eventQueue viewer)
+    atomically <| readTQueue (eventQueue viewer)
 {-# INLINE getNextEvent #-}

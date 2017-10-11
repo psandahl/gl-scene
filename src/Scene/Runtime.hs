@@ -11,6 +11,7 @@ module Scene.Runtime
     ( Runtime (..)
     , getViewport
     , setViewport
+    , getCurrentScene
     , getRenderState
     , emitEvent
     , scanRequests
@@ -25,12 +26,14 @@ import           Flow                   ((<|))
 import           Graphics.UI.GLFW       (Window)
 import           Scene.GL.Program       (Program, ProgramRequest)
 import qualified Scene.GL.Program       as Program
+import           Scene.Scene            (Scene)
 import           Scene.Types            (Event, RenderState, Viewport)
 
 data Runtime = Runtime
     { window         :: !Window
     , viewport       :: !(IORef Viewport)
     , frameStart     :: !Double
+    , currentScene   :: !(TVar Scene)
     , renderState    :: !(TVar RenderState)
     , eventQueue     :: !(TQueue Event)
     , programRequest :: !(TQueue (ProgramRequest ByteString))
@@ -46,6 +49,11 @@ getViewport = readIORef . viewport
 setViewport :: Runtime -> Viewport -> IO ()
 setViewport runtime = writeIORef (viewport runtime)
 {-# INLINE setViewport #-}
+
+-- | Get the current 'Scene'.
+getCurrentScene :: Runtime -> IO Scene
+getCurrentScene = readTVarIO . currentScene
+{-# INLINE getCurrentScene #-}
 
 -- | Get the current 'RenderState' value.
 getRenderState :: Runtime -> IO RenderState
