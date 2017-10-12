@@ -12,7 +12,7 @@ module Scene.GL.Mesh
     ( Mesh
     , MeshRequest (..)
     , Primitive (..)
-    --, fromRequest
+    , fromRequest
     , enable
     , disable
     , delete
@@ -20,8 +20,9 @@ module Scene.GL.Mesh
 
 import           Control.DeepSeq      (NFData (..))
 import           Data.Vector.Storable (Vector)
+import qualified Data.Vector.Storable as Vector
 import           Flow                 ((<|))
-import           Foreign              (Storable)
+import           Foreign              (Storable (..), castPtr)
 import           GHC.Generics         (Generic)
 import qualified Graphics.GL          as GL
 import           Scene.GL.Attribute   (Attribute (..))
@@ -65,6 +66,11 @@ data Primitive
 instance ToGLenum Primitive where
     toGLenum Triangles = GL.GL_TRIANGLES
 
+-- | Create a 'Mesh' from a 'MeshRequest'. Assume that the vertex vector is
+-- non-empty.
+fromRequest :: MeshRequest -> IO Mesh
+fromRequest = undefined
+
 -- | Enable the 'Mesh' by binding it.
 enable :: Mesh -> IO ()
 enable = GL.glBindVertexArray . theVao
@@ -73,10 +79,23 @@ enable = GL.glBindVertexArray . theVao
 -- | Disable the current 'Mesh'.
 disable :: IO ()
 disable = GL.glBindVertexArray 0
+{-# INLINE disable #-}
 
 -- | Delete the VAO related to this 'Mesh'.
 delete :: Mesh -> IO ()
 delete = delVertexArray . theVao
+
+-- | Fill the VBO with vertex data. Assume that the vertex vector is non-empty.
+fillVBO :: Storable a => Vector a -> IO ()
+fillVBO vertices' =
+    Vector.unsafeWith vertices' $ \ptr -> do
+        let first = Vector.head vertices'
+            itemSize = sizeOf first
+            storageSize = itemSize * Vector.length vertices'
+        GL.glBufferData GL.GL_ARRAY_BUFFER
+                        (fromIntegral storageSize)
+                        (castPtr ptr)
+                        GL.GL_STATIC_DRAW
 
 -- | Alloc one VAO, one VBO and bind both buffers.
 allocBoundBuffers :: IO GL.GLuint
