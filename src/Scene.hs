@@ -13,6 +13,9 @@ module Scene
     , Configuration (..)
     , DisplayMode (..)
     , Event (..)
+    , Mesh
+    , MeshRequest (..)
+    , Primitive (..)
     , Program
     , ProgramRequest (..)
     , Scene (..)
@@ -31,6 +34,7 @@ module Scene
 import           Scene.GL.Action    (Action (..), BufferBit (..),
                                      Capability (..))
 import           Scene.GL.Attribute (Attribute (..))
+import           Scene.GL.Mesh      (Mesh, MeshRequest (..), Primitive (..))
 import           Scene.GL.Program   (Program, ProgramRequest (..),
                                      ShaderType (..))
 import           Scene.GL.Uniform   (Uniform (..), UniformValue (..))

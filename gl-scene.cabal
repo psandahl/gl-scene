@@ -25,6 +25,7 @@ library
                        Scene.GL.Action
                        Scene.GL.Attribute
                        Scene.GL.Attribute.VertexWithPos
+                       Scene.GL.Mesh
                        Scene.GL.Program
                        Scene.GL.Resource
                        Scene.GL.Types
