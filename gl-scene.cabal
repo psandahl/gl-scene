@@ -23,6 +23,7 @@ library
                        Scene.Types
                        Scene.Viewer
                        Scene.GL.Action
+                       Scene.GL.Attribute
                        Scene.GL.Program
                        Scene.GL.Resource
                        Scene.GL.Types

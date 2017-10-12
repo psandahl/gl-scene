@@ -7,6 +7,7 @@
 -- Portability: portable
 module Scene
     ( Action (..)
+    , Attribute (..)
     , BufferBit (..)
     , Capability (..)
     , Configuration (..)
@@ -27,13 +28,16 @@ module Scene
     , programFromByteStrings
     ) where
 
-import           Scene.GL.Action  (Action (..), BufferBit (..), Capability (..))
-import           Scene.GL.Program (Program, ProgramRequest (..),
-                                   ShaderType (..))
-import           Scene.GL.Uniform (Uniform (..), UniformValue (..))
-import           Scene.Kernel     (Configuration (..), defaultConfiguration,
-                                   viewScenes)
-import           Scene.Scene      (Scene (..))
-import           Scene.Types      (DisplayMode (..), Event (..), Viewport (..))
-import           Scene.Viewer     (Viewer, close, programFromByteStrings,
-                                   programFromFiles)
+import           Scene.GL.Action    (Action (..), BufferBit (..),
+                                     Capability (..))
+import           Scene.GL.Attribute (Attribute (..))
+import           Scene.GL.Program   (Program, ProgramRequest (..),
+                                     ShaderType (..))
+import           Scene.GL.Uniform   (Uniform (..), UniformValue (..))
+import           Scene.Kernel       (Configuration (..), defaultConfiguration,
+                                     viewScenes)
+import           Scene.Scene        (Scene (..))
+import           Scene.Types        (DisplayMode (..), Event (..),
+                                     Viewport (..))
+import           Scene.Viewer       (Viewer, close, programFromByteStrings,
+                                     programFromFiles)
