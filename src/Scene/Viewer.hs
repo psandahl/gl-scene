@@ -13,6 +13,7 @@ module Scene.Viewer
     , close
     , programFromFiles
     , programFromByteStrings
+    , meshFromRequest
     , waitOnTermination
     , setCurrentScene
     , setRenderState
@@ -26,6 +27,8 @@ import           Control.Concurrent.STM   (TQueue, TVar, atomically, readTQueue,
 import           Control.DeepSeq          (($!!))
 import           Data.ByteString.Char8    (ByteString)
 import           Flow                     ((<|))
+import           Scene.GL.Mesh            (Mesh, MeshRequest,
+                                           hasNonEmptyVectors)
 import           Scene.GL.Program         (Program, ProgramRequest, readSources)
 import           Scene.Scene              (Scene)
 import           Scene.Types              (Event, RenderState (..))
@@ -39,6 +42,8 @@ data Viewer = Viewer
     , eventQueue     :: !(TQueue Event)
     , programRequest :: !(TQueue (ProgramRequest ByteString))
     , programReply   :: !(TQueue (Either String Program))
+    , meshRequest    :: !(TQueue MeshRequest)
+    , meshReply      :: !(TQueue Mesh)
     }
 
 -- | Request the renderer to close. This state change is unconditional, when
@@ -70,6 +75,15 @@ programFromByteStrings :: Viewer -> ProgramRequest ByteString
 programFromByteStrings viewer request = do
     atomically <| writeTQueue (programRequest viewer) $!! request
     atomically <| readTQueue (programReply viewer)
+
+-- | Construct a 'Mesh' from a 'MeshRequest'.
+meshFromRequest :: Viewer -> MeshRequest -> IO (Either String Mesh)
+meshFromRequest viewer request =
+    if hasNonEmptyVectors request
+        then do
+            atomically <| writeTQueue (meshRequest viewer) $!! request
+            Right <$> (atomically <| readTQueue (meshReply viewer))
+        else return $ Left "MeshRequest must not have empty vectors"
 
 -- | Wait until the render thread has terminated.
 waitOnTermination :: Viewer -> IO ()

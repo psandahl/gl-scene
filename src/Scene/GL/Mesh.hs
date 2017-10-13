@@ -12,6 +12,7 @@ module Scene.GL.Mesh
     ( Mesh
     , MeshRequest (..)
     , Primitive (..)
+    , hasNonEmptyVectors
     , fromRequest
     , enable
     , disable
@@ -66,10 +67,25 @@ data Primitive
 instance ToGLenum Primitive where
     toGLenum Triangles = GL.GL_TRIANGLES
 
+-- | Check that the 'MeshRequest' has non empty vectors (vertices and indices).
+hasNonEmptyVectors :: MeshRequest -> Bool
+hasNonEmptyVectors (MeshRequest vertices' indices' _) =
+    Vector.length vertices' > 0 && Vector.length indices' > 0
+{-# INLINE hasNonEmptyVectors #-}
+
 -- | Create a 'Mesh' from a 'MeshRequest'. Assume that the vertex vector is
 -- non-empty.
 fromRequest :: MeshRequest -> IO Mesh
-fromRequest = undefined
+fromRequest (MeshRequest vertices' indices' primitive') = do
+    vaoId <- allocBoundBuffers
+    fillVBO vertices'
+    setAttributes vertices'
+    GL.glBindVertexArray 0
+
+    return Mesh { theVao = vaoId
+                , theIndices = indices'
+                , thePrimitive = primitive'
+                }
 
 -- | Enable the 'Mesh' by binding it.
 enable :: Mesh -> IO ()

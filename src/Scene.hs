@@ -27,6 +27,7 @@ module Scene
     , defaultConfiguration
     , viewScenes
     , close
+    , meshFromRequest
     , programFromFiles
     , programFromByteStrings
     ) where
@@ -43,5 +44,5 @@ import           Scene.Kernel       (Configuration (..), defaultConfiguration,
 import           Scene.Scene        (Scene (..))
 import           Scene.Types        (DisplayMode (..), Event (..),
                                      Viewport (..))
-import           Scene.Viewer       (Viewer, close, programFromByteStrings,
-                                     programFromFiles)
+import           Scene.Viewer       (Viewer, close, meshFromRequest,
+                                     programFromByteStrings, programFromFiles)

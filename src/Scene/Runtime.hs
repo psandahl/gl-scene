@@ -24,6 +24,8 @@ import           Data.ByteString.Char8  (ByteString)
 import           Data.IORef             (IORef, readIORef, writeIORef)
 import           Flow                   ((<|))
 import           Graphics.UI.GLFW       (Window)
+import           Scene.GL.Mesh          (Mesh, MeshRequest)
+import qualified Scene.GL.Mesh          as Mesh
 import           Scene.GL.Program       (Program, ProgramRequest)
 import qualified Scene.GL.Program       as Program
 import           Scene.Scene            (Scene)
@@ -38,6 +40,8 @@ data Runtime = Runtime
     , eventQueue     :: !(TQueue Event)
     , programRequest :: !(TQueue (ProgramRequest ByteString))
     , programReply   :: !(TQueue (Either String Program))
+    , meshRequest    :: !(TQueue MeshRequest)
+    , meshReply      :: !(TQueue Mesh)
     }
 
 -- | Get the 'Viewport' value.
@@ -69,11 +73,19 @@ emitEvent runtime event =
 
 -- | Scan all the request queues, and handle one request per queue.
 scanRequests :: Runtime -> IO ()
-scanRequests runtime =
+scanRequests runtime = do
     maybe (return ()) (handleProgramRequest runtime) =<<
         (atomically <| tryReadTQueue (programRequest runtime))
+
+    maybe (return ()) (handleMeshRequest runtime) =<<
+        (atomically <| tryReadTQueue (meshRequest runtime))
 
 handleProgramRequest :: Runtime -> ProgramRequest ByteString -> IO ()
 handleProgramRequest runtime request = do
     result <- Program.fromRequest request
-    atomically $ writeTQueue (programReply runtime) $!! result
+    atomically <| writeTQueue (programReply runtime) $!! result
+
+handleMeshRequest :: Runtime -> MeshRequest -> IO ()
+handleMeshRequest runtime request = do
+    result <- Mesh.fromRequest request
+    atomically <| writeTQueue (meshReply runtime) $!! result
