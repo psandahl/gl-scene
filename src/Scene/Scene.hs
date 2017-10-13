@@ -19,10 +19,12 @@ import           Control.DeepSeq (NFData)
 import           GHC.Generics    (Generic)
 import           Scene.GL.Action (Action, withTemporaryActions)
 
+-- | The Scene record is the root of the scene graph.
 data Scene = Scene
     { actions :: ![Action]
     } deriving (Generic, NFData, Show)
 
+-- | Render the 'Scene'.
 render :: Scene -> IO ()
 render scene =
     withTemporaryActions (actions scene) $
