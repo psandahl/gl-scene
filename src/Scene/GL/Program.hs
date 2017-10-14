@@ -13,6 +13,7 @@ module Scene.GL.Program
     , ShaderType (..)
     , readSources
     , fromRequest
+    , setUniforms
     , enable
     , disable
     , delete
@@ -29,7 +30,8 @@ import           Foreign.C             (peekCString, withCString)
 import           GHC.Generics          (Generic)
 import qualified Graphics.GL           as GL
 import           Scene.GL.Types        (ToGLenum (..))
-import           Scene.GL.Uniform      (UniformLocationMap, getUniformLocations)
+import           Scene.GL.Uniform      (UniformLocationMap, UniformValue,
+                                        getUniformLocations, setUniformValues)
 import           Text.Printf           (printf)
 
 -- | A representation of a program. The 'Program' type is opaque to the user.
@@ -82,6 +84,11 @@ fromRequest request = do
                     }
 
         Left err -> return $ Left err
+
+-- | Set uniform values for the program. Program must be enabled.
+setUniforms :: Program -> [UniformValue] -> IO ()
+setUniforms program = setUniformValues (uniformLocations program)
+{-# INLINE setUniforms #-}
 
 -- | Enable the program.
 enable :: Program -> IO ()

@@ -17,6 +17,7 @@ module Scene.GL.Mesh
     , enable
     , disable
     , delete
+    , render
     ) where
 
 import           Control.DeepSeq      (NFData (..))
@@ -100,6 +101,14 @@ disable = GL.glBindVertexArray 0
 -- | Delete the VAO related to this 'Mesh'.
 delete :: Mesh -> IO ()
 delete = delVertexArray . theVao
+
+-- | Render the 'Mesh'.
+render :: Mesh -> IO ()
+render mesh =
+    Vector.unsafeWith (theIndices mesh) $
+        GL.glDrawElements (toGLenum <| thePrimitive mesh)
+                          (fromIntegral <| Vector.length (theIndices mesh))
+                          GL.GL_UNSIGNED_INT . castPtr
 
 -- | Fill the VBO with vertex data. Assume that the vertex vector is non-empty.
 fillVBO :: Storable a => Vector a -> IO ()

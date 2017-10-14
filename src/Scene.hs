@@ -12,6 +12,7 @@ module Scene
     , Capability (..)
     , Configuration (..)
     , DisplayMode (..)
+    , Entity (..)
     , Event (..)
     , Mesh
     , MeshRequest (..)
@@ -30,6 +31,7 @@ module Scene
     , meshFromRequest
     , programFromFiles
     , programFromByteStrings
+    , setCurrentScene
     ) where
 
 import           Scene.GL.Action    (Action (..), BufferBit (..),
@@ -41,8 +43,9 @@ import           Scene.GL.Program   (Program, ProgramRequest (..),
 import           Scene.GL.Uniform   (Uniform (..), UniformValue (..))
 import           Scene.Kernel       (Configuration (..), defaultConfiguration,
                                      viewScenes)
-import           Scene.Scene        (Scene (..))
+import           Scene.Scene        (Entity (..), Scene (..))
 import           Scene.Types        (DisplayMode (..), Event (..),
                                      Viewport (..))
 import           Scene.Viewer       (Viewer, close, meshFromRequest,
-                                     programFromByteStrings, programFromFiles)
+                                     programFromByteStrings, programFromFiles,
+                                     setCurrentScene)

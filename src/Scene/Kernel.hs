@@ -54,7 +54,10 @@ defaultConfiguration =
         , glVersionMinor = 3
         , displayMode = Windowed 1024 768
         , globalActions = []
-        , initialScene = Scene { actions = [] }
+        , initialScene =
+            Scene { sceneActions = []
+                  , sceneEntities = []
+                  }
         , debugContext = True
         }
 
@@ -151,13 +154,13 @@ renderLoop = go
 
             -- If the 'RenderState' is Running, emit a Frame event to the
             -- application.
+            viewport <- Runtime.getViewport runtime
             when (renderState == Running) $ do
                 let duration = now - Runtime.frameStart runtime
-                viewport <- Runtime.getViewport runtime
                 Runtime.emitEvent runtime $ Frame duration viewport
 
             -- Render the current scene.
-            Scene.render =<< Runtime.getCurrentScene runtime
+            Scene.render viewport =<< Runtime.getCurrentScene runtime
 
             let window = Runtime.window runtime
 
