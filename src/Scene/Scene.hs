@@ -37,11 +37,11 @@ data Scene = Scene
 -- | The Enitity are stuff that can be rendered, or groups of stuff that
 -- can be rendered.
 data Entity
-    = Screen
-        { screenSettings :: ![Setting]
-        , screenProgram  :: !Program
-        , screenMesh     :: !Mesh
-        , screenUniforms :: ![UniformValue]
+    = Entity
+        { entitySettings :: ![Setting]
+        , entityProgram  :: !Program
+        , entityMesh     :: !Mesh
+        , entityUniforms :: ![UniformValue]
         }
     deriving (Generic, NFData, Show)
 
@@ -54,11 +54,11 @@ render viewport scene = do
 
 -- | Render a single 'Entity'.
 renderEntity :: Entity -> IO ()
-renderEntity screen@Screen {} =
-    withTemporarySettings (screenSettings screen) $ do
-        Program.enable <| screenProgram screen
-        Program.setUniforms (screenProgram screen) (screenUniforms screen)
-        Mesh.enable <| screenMesh screen
-        Mesh.render <| screenMesh screen
+renderEntity entity@Entity {} =
+    withTemporarySettings (entitySettings entity) $ do
+        Program.enable <| entityProgram entity
+        Program.setUniforms (entityProgram entity) (entityUniforms entity)
+        Mesh.enable <| entityMesh entity
+        Mesh.render <| entityMesh entity
         Mesh.disable
         Program.disable
