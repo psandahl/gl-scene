@@ -6,8 +6,7 @@
 -- Stability: experimental
 -- Portability: portable
 module Scene
-    ( Action (..)
-    , Attribute (..)
+    ( Attribute (..)
     , BufferBit (..)
     , Capability (..)
     , Configuration (..)
@@ -19,6 +18,7 @@ module Scene
     , Primitive (..)
     , Program
     , ProgramRequest (..)
+    , Setting (..)
     , Scene (..)
     , ShaderType (..)
     , Uniform (..)
@@ -34,12 +34,12 @@ module Scene
     , setCurrentScene
     ) where
 
-import           Scene.GL.Action    (Action (..), BufferBit (..),
-                                     Capability (..))
 import           Scene.GL.Attribute (Attribute (..))
 import           Scene.GL.Mesh      (Mesh, MeshRequest (..), Primitive (..))
 import           Scene.GL.Program   (Program, ProgramRequest (..),
                                      ShaderType (..))
+import           Scene.GL.Setting   (BufferBit (..), Capability (..),
+                                     Setting (..))
 import           Scene.GL.Uniform   (Uniform (..), UniformValue (..))
 import           Scene.Kernel       (Configuration (..), defaultConfiguration,
                                      viewScenes)

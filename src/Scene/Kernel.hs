@@ -24,7 +24,7 @@ import           Data.Maybe               (isNothing)
 import           Graphics.UI.GLFW         (Window)
 import           Graphics.UI.GLFW         as GLFW
 import           Scene.Callback           (subscribeToMandatoryCallbacks)
-import           Scene.GL.Action          (Action, applyPersistantActions)
+import           Scene.GL.Setting         (Setting, applyPersistantSettings)
 import           Scene.Runtime            (Runtime)
 import qualified Scene.Runtime            as Runtime
 import           Scene.Scene              (Scene (..))
@@ -40,7 +40,7 @@ data Configuration = Configuration
     , glVersionMajor :: !Int
     , glVersionMinor :: !Int
     , displayMode    :: !DisplayMode
-    , globalActions  :: ![Action]
+    , globalSettings :: ![Setting]
     , initialScene   :: !Scene
     , debugContext   :: !Bool
     } deriving Show
@@ -53,9 +53,9 @@ defaultConfiguration =
         , glVersionMajor = 3
         , glVersionMinor = 3
         , displayMode = Windowed 1024 768
-        , globalActions = []
+        , globalSettings = []
         , initialScene =
-            Scene { sceneActions = []
+            Scene { sceneSettings = []
                   , sceneEntities = []
                   }
         , debugContext = True
@@ -90,7 +90,7 @@ viewScenes configuration onInit onEvent onExit = do
             -- Start the render thread.
             viewport <- newIORef Viewport { width = width', height = height' }
             thread <- asyncBound $
-                renderThread (globalActions configuration)
+                renderThread (globalSettings configuration)
                     Runtime.Runtime
                         { Runtime.window = window
                         , Runtime.viewport = viewport
@@ -123,16 +123,16 @@ viewScenes configuration onInit onEvent onExit = do
 
 -- | Entry for the renderering thread. This must run in a bound thread due
 -- to OpenGL using thread local storage.
-renderThread :: [Action] -> Runtime -> IO ()
-renderThread globalActions' runtime = do
+renderThread :: [Setting] -> Runtime -> IO ()
+renderThread globalSettings' runtime = do
     -- Make the OpenGL context current for this thread.
     GLFW.makeContextCurrent (Just $ Runtime.window runtime)
 
     -- Subscribe to mandatory callbacks.
     subscribeToMandatoryCallbacks runtime
 
-    -- Apply global, persistant, actions.
-    applyPersistantActions globalActions'
+    -- Apply global, persistant, settings.
+    applyPersistantSettings globalSettings'
 
     -- Run the render loop until 'RenderState' value Done is reached.
     renderLoop runtime

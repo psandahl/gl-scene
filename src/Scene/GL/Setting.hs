@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric  #-}
 -- |
--- Module: Scene.GL.Action
+-- Module: Scene.GL.Setting
 -- Copyright: (c) 2017 Patrik Sandahl
 -- Licence: MIT
 -- Maintainer: Patrik Sandahl <patrik.sandahl@gmail.com>
@@ -9,12 +9,12 @@
 -- Portability: portable
 --
 -- The Action module provides GL actions to manipulate the GL state machine.
-module Scene.GL.Action
-    ( Action (..)
+module Scene.GL.Setting
+    ( Setting (..)
     , BufferBit (..)
     , Capability (..)
-    , applyPersistantActions
-    , withTemporaryActions
+    , applyPersistantSettings
+    , withTemporarySettings
     ) where
 
 import           Control.DeepSeq (NFData)
@@ -25,8 +25,8 @@ import           GHC.Generics    (Generic)
 import qualified Graphics.GL     as GL
 import           Scene.GL.Types  (ToGLbitfield (..), ToGLenum (..))
 
--- | Actions are used to manipulate the GL state machine.
-data Action
+-- | Settings are used to manipulate the GL state machine.
+data Setting
     = ClearColor !GL.GLfloat !GL.GLfloat !GL.GLfloat !GL.GLfloat
     | Clear ![BufferBit]
     | Enable !Capability
@@ -51,26 +51,26 @@ data Capability
 instance ToGLenum Capability where
     toGLenum DepthTest = GL.GL_DEPTH_TEST
 
--- | Apply persistant actions. Shall only be used for global actions.
-applyPersistantActions :: [Action] -> IO ()
-applyPersistantActions = applyActions
+-- | Apply persistant settings. Shall only be used for global actions.
+applyPersistantSettings :: [Setting] -> IO ()
+applyPersistantSettings = applySettings
 
--- | Apply temporary actions before executing the IO action. After the IO
--- action the effect of the actions are reverted.
-withTemporaryActions :: [Action] -> IO () -> IO ()
-withTemporaryActions glActions ioAction = do
-    reverseActions <- makeReverseActions glActions
-    applyActions glActions
-    ioAction
-    runReverseActions reverseActions
+-- | Apply temporary settings before executing the action. After the
+-- action the effect of the settings are reverted.
+withTemporarySettings :: [Setting] -> IO () -> IO ()
+withTemporarySettings settings action = do
+    reverseSettings <- makeReverseSettings settings
+    applySettings settings
+    action
+    runReverseSettings reverseSettings
 
-applyActions :: [Action] -> IO ()
-applyActions = mapM_ applyAction
-{-# INLINE applyActions #-}
+applySettings :: [Setting] -> IO ()
+applySettings = mapM_ applySetting
+{-# INLINE applySettings #-}
 
-applyAction :: Action -> IO ()
-applyAction action =
-    case action of
+applySetting :: Setting -> IO ()
+applySetting setting =
+    case setting of
         ClearColor r g b a ->
             GL.glClearColor r g b a
 
@@ -83,32 +83,32 @@ applyAction action =
         Disable cap ->
             GL.glDisable <| toGLenum cap
 
-runReverseActions :: [IO ()] -> IO ()
-runReverseActions = sequence_
-{-# INLINE runReverseActions #-}
+runReverseSettings :: [IO ()] -> IO ()
+runReverseSettings = sequence_
+{-# INLINE runReverseSettings #-}
 
-makeReverseActions :: [Action] -> IO [IO ()]
-makeReverseActions = mapM makeReverseAction
-{-# INLINE makeReverseActions #-}
+makeReverseSettings :: [Setting] -> IO [IO ()]
+makeReverseSettings = mapM makeReverseSetting
+{-# INLINE makeReverseSettings #-}
 
--- | Make a reverse action (if any) for the given 'Action'.
-makeReverseAction :: Action -> IO (IO ())
-makeReverseAction action =
-    case action of
+-- | Make a reverse setting (if any) for the given 'Setting'.
+makeReverseSetting :: Setting -> IO (IO ())
+makeReverseSetting setting =
+    case setting of
         -- ClearColor have to reverse action.
         ClearColor {} ->
-            return emptyReverseAction
+            return emptyReverseSetting
 
         -- Clear have no reverse action.
         Clear {} ->
-            return emptyReverseAction
+            return emptyReverseSetting
 
         -- When enabling a 'Capability', if the capability was disabled
         -- it shall be reversed back to disabled.
         Enable cap -> do
             enabled <- GL.glIsEnabled <| toGLenum cap
             if enabled == GL.GL_TRUE
-                then return emptyReverseAction
+                then return emptyReverseSetting
                 else return <| GL.glDisable <| toGLenum cap
 
         -- When disabling a 'Capability', if the capability was enabled
@@ -117,10 +117,10 @@ makeReverseAction action =
             enabled <- GL.glIsEnabled <| toGLenum cap
             if enabled == GL.GL_TRUE
                 then return <| GL.glEnable <| toGLenum cap
-                else return emptyReverseAction
+                else return emptyReverseSetting
 
-emptyReverseAction :: IO ()
-emptyReverseAction = return ()
+emptyReverseSetting :: IO ()
+emptyReverseSetting = return ()
 
 concatBufferBits :: [BufferBit] -> GL.GLbitfield
 concatBufferBits = foldl' (\acc bit -> acc .|. toGLbitfield bit) 0

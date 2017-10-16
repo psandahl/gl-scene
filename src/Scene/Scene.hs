@@ -20,17 +20,17 @@ import           Control.DeepSeq  (NFData)
 import           Flow             ((<|))
 import           GHC.Generics     (Generic)
 import qualified Graphics.GL      as GL
-import           Scene.GL.Action  (Action, withTemporaryActions)
 import           Scene.GL.Mesh    (Mesh)
 import qualified Scene.GL.Mesh    as Mesh
 import           Scene.GL.Program (Program)
 import qualified Scene.GL.Program as Program
+import           Scene.GL.Setting (Setting, withTemporarySettings)
 import           Scene.GL.Uniform (UniformValue)
 import           Scene.Types      (Viewport (..))
 
 -- | The Scene record is the root of the scene graph.
 data Scene = Scene
-    { sceneActions  :: ![Action]
+    { sceneSettings :: ![Setting]
     , sceneEntities :: ![Entity]
     } deriving (Generic, NFData, Show)
 
@@ -38,7 +38,7 @@ data Scene = Scene
 -- can be rendered.
 data Entity
     = Screen
-        { screenActions  :: ![Action]
+        { screenSettings :: ![Setting]
         , screenProgram  :: !Program
         , screenMesh     :: !Mesh
         , screenUniforms :: ![UniformValue]
@@ -49,13 +49,13 @@ data Entity
 render :: Viewport -> Scene -> IO ()
 render viewport scene = do
     GL.glViewport 0 0 (fromIntegral <| width viewport) (fromIntegral <| height viewport)
-    withTemporaryActions (sceneActions scene) $
+    withTemporarySettings (sceneSettings scene) $
         mapM_ renderEntity <| sceneEntities scene
 
 -- | Render a single 'Entity'.
 renderEntity :: Entity -> IO ()
 renderEntity screen@Screen {} =
-    withTemporaryActions (screenActions screen) $ do
+    withTemporarySettings (screenSettings screen) $ do
         Program.enable <| screenProgram screen
         Program.setUniforms (screenProgram screen) (screenUniforms screen)
         Mesh.enable <| screenMesh screen
