@@ -15,7 +15,7 @@ module Scene.Viewer
     , programFromByteStrings
     , meshFromRequest
     , waitOnTermination
-    , setCurrentScene
+    , setScene
     , setRenderState
     , getRenderState
     , getNextEvent
@@ -52,10 +52,10 @@ close :: Viewer -> IO ()
 close viewer = setRenderState viewer Closing
 
 -- | Set a new 'Scene'.
-setCurrentScene :: Viewer -> Scene -> IO ()
-setCurrentScene viewer scene =
+setScene :: Viewer -> Scene -> IO ()
+setScene viewer scene =
     atomically <| writeTVar (currentScene viewer) $!! scene
-{-# INLINE setCurrentScene #-}
+{-# INLINE setScene #-}
 
 -- | Load a program from source files. All file i/o is performed in the
 -- application thread.

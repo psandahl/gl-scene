@@ -31,7 +31,7 @@ module Scene
     , meshFromRequest
     , programFromFiles
     , programFromByteStrings
-    , setCurrentScene
+    , setScene
     ) where
 
 import           Scene.GL.Attribute (Attribute (..))
@@ -48,4 +48,4 @@ import           Scene.Types        (DisplayMode (..), Event (..),
                                      Viewport (..))
 import           Scene.Viewer       (Viewer, close, meshFromRequest,
                                      programFromByteStrings, programFromFiles,
-                                     setCurrentScene)
+                                     setScene)
