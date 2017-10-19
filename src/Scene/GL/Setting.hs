@@ -21,6 +21,7 @@ import           Control.DeepSeq (NFData)
 import           Data.Bits       ((.|.))
 import           Data.List       (foldl')
 import           Flow            ((<|))
+import           Foreign         (peekArray, withArray)
 import           GHC.Generics    (Generic)
 import qualified Graphics.GL     as GL
 import           Scene.GL.Types  (ToGLbitfield (..), ToGLenum (..))
@@ -28,9 +29,17 @@ import           Scene.GL.Types  (ToGLbitfield (..), ToGLenum (..))
 -- | Settings are used to manipulate the GL state machine.
 data Setting
     = ClearColor !GL.GLfloat !GL.GLfloat !GL.GLfloat !GL.GLfloat
+    -- ^ Setting the color used for clearing the framebuffer (default: 0 0 0 0).
+    | ClearDepth !GL.GLfloat
+    -- ^ Setting the depth value used for clearing the framebuffer (default: 1).
     | Clear ![BufferBit]
+    -- ^ Clear the specified buffers identified by 'BufferBit'.
     | Enable !Capability
+    -- ^ Enable a 'Capability'.
     | Disable !Capability
+    -- ^ Disable a 'Capability'.
+    | DepthMask !Bool
+    -- ^ Specify whether the depth buffer is enabled for writing (default: True).
     deriving (Generic, NFData, Show)
 
 -- | Buffer bits.
@@ -74,6 +83,9 @@ applySetting setting =
         ClearColor r g b a ->
             GL.glClearColor r g b a
 
+        ClearDepth v ->
+            GL.glClearDepthf v
+
         Clear bufferBits ->
             GL.glClear <| concatBufferBits bufferBits
 
@@ -82,6 +94,9 @@ applySetting setting =
 
         Disable cap ->
             GL.glDisable <| toGLenum cap
+
+        DepthMask val ->
+            GL.glDepthMask <| toGLboolean val
 
 runReverseSettings :: [IO ()] -> IO ()
 runReverseSettings = sequence_
@@ -95,11 +110,15 @@ makeReverseSettings = mapM makeReverseSetting
 makeReverseSetting :: Setting -> IO (IO ())
 makeReverseSetting setting =
     case setting of
-        -- ClearColor have to reverse action.
+        -- ClearColor have no reverse setting.
         ClearColor {} ->
             return emptyReverseSetting
 
-        -- Clear have no reverse action.
+        -- ClearDepth have no reverse setting.
+        ClearDepth _ ->
+            return emptyReverseSetting
+
+        -- Clear have no reverse setting.
         Clear {} ->
             return emptyReverseSetting
 
@@ -119,9 +138,24 @@ makeReverseSetting setting =
                 then return <| GL.glEnable <| toGLenum cap
                 else return emptyReverseSetting
 
+        -- Just fetch the current depth mask status, and set it in the
+        -- reverse setting.
+        DepthMask _ -> do
+            val <- getBoolean GL.GL_DEPTH_WRITEMASK
+            return <| GL.glDepthMask val
+
 emptyReverseSetting :: IO ()
 emptyReverseSetting = return ()
 
 concatBufferBits :: [BufferBit] -> GL.GLbitfield
 concatBufferBits = foldl' (\acc bit -> acc .|. toGLbitfield bit) 0
-{-# INLINE concatBufferBits #-}
+
+toGLboolean :: Bool -> GL.GLboolean
+toGLboolean False = GL.GL_FALSE
+toGLboolean True  = GL.GL_TRUE
+
+getBoolean :: GL.GLenum -> IO GL.GLboolean
+getBoolean enum =
+    withArray [GL.GL_FALSE] $ \ptr -> do
+        GL.glGetBooleanv enum ptr
+        head <$> peekArray 1 ptr
