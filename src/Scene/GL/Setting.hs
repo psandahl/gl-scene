@@ -40,6 +40,8 @@ data Setting
     -- ^ Disable a 'Capability'.
     | DepthMask !Bool
     -- ^ Specify whether the depth buffer is enabled for writing (default: True).
+    | DepthFunc !DepthFunction
+    -- ^ Setting the function for depth comparison (default: Less)
     deriving (Generic, NFData, Show)
 
 -- | Buffer bits.
@@ -59,6 +61,36 @@ data Capability
 
 instance ToGLenum Capability where
     toGLenum DepthTest = GL.GL_DEPTH_TEST
+
+-- | Depth functions.
+data DepthFunction
+    = Never
+    -- ^ Never passes.
+    | Less
+    -- ^ Passes if the incoming depth value is less than the stored depth value.
+    | Equal
+    -- ^ Passes if the incoming depth value is equal to the stored depth value.
+    | LessOrEqual
+    -- ^ Passes if the incoming depth value is less than or equal to the stored depth value.
+    | Greater
+    -- ^ Passes if the incoming depth value is greater than the stored depth value.
+    | NotEqual
+    -- ^ Passes if the incoming depth value is not equal to the stored depth value.
+    | GreaterOrEqual
+    -- ^ Passes if the incoming depth value is greater than or equal to the stored depth value.
+    | Always
+    -- ^ Always pass.
+    deriving (Generic, NFData, Show)
+
+instance ToGLenum DepthFunction where
+    toGLenum Never          = GL.GL_NEVER
+    toGLenum Less           = GL.GL_LESS
+    toGLenum Equal          = GL.GL_EQUAL
+    toGLenum LessOrEqual    = GL.GL_LEQUAL
+    toGLenum Greater        = GL.GL_GREATER
+    toGLenum NotEqual       = GL.GL_NOTEQUAL
+    toGLenum GreaterOrEqual = GL.GL_GEQUAL
+    toGLenum Always         = GL.GL_ALWAYS
 
 -- | Apply persistant settings. Shall only be used for global actions.
 applyPersistantSettings :: [Setting] -> IO ()
@@ -97,6 +129,9 @@ applySetting setting =
 
         DepthMask val ->
             GL.glDepthMask <| toGLboolean val
+
+        DepthFunc func ->
+            GL.glDepthFunc <| toGLenum func
 
 runReverseSettings :: [IO ()] -> IO ()
 runReverseSettings = sequence_
@@ -144,6 +179,12 @@ makeReverseSetting setting =
             val <- getBoolean GL.GL_DEPTH_WRITEMASK
             return <| GL.glDepthMask val
 
+        -- Just fetch the current depth function, and set it in the
+        -- reverse setting.
+        DepthFunc _ -> do
+            val <- getEnum GL.GL_DEPTH_FUNC
+            return <| GL.glDepthFunc val
+
 emptyReverseSetting :: IO ()
 emptyReverseSetting = return ()
 
@@ -159,3 +200,12 @@ getBoolean enum =
     withArray [GL.GL_FALSE] $ \ptr -> do
         GL.glGetBooleanv enum ptr
         head <$> peekArray 1 ptr
+
+getInteger :: GL.GLenum -> IO GL.GLint
+getInteger enum =
+    withArray [0] $ \ptr -> do
+        GL.glGetIntegerv enum ptr
+        head <$> peekArray 1 ptr
+
+getEnum :: GL.GLenum -> IO GL.GLenum
+getEnum enum = fromIntegral <$> getInteger enum
