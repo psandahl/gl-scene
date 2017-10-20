@@ -13,6 +13,8 @@ module Scene.GL.Setting
     ( Setting (..)
     , BufferBit (..)
     , Capability (..)
+    , DepthFunction (..)
+    , Face (..)
     , applyPersistantSettings
     , withTemporarySettings
     ) where
@@ -42,6 +44,8 @@ data Setting
     -- ^ Specify whether the depth buffer is enabled for writing (default: True).
     | DepthFunc !DepthFunction
     -- ^ Setting the function for depth comparison (default: Less)
+    | CullFaceMode !Face
+    -- ^ Setting the facet cull mode (default: Back).
     deriving (Generic, NFData, Show)
 
 -- | Buffer bits.
@@ -57,10 +61,12 @@ instance ToGLbitfield BufferBit where
 -- | GL capabilities.
 data Capability
     = DepthTest
+    | CullFace
     deriving (Generic, NFData, Show)
 
 instance ToGLenum Capability where
     toGLenum DepthTest = GL.GL_DEPTH_TEST
+    toGLenum CullFace  = GL.GL_CULL_FACE
 
 -- | Depth functions.
 data DepthFunction
@@ -91,6 +97,19 @@ instance ToGLenum DepthFunction where
     toGLenum NotEqual       = GL.GL_NOTEQUAL
     toGLenum GreaterOrEqual = GL.GL_GEQUAL
     toGLenum Always         = GL.GL_ALWAYS
+
+-- | Specification of faces to cull. Front face is a face with vertices
+-- rendered in counter clock-wise order.
+data Face
+    = Back
+    | Front
+    | FrontAndBack
+    deriving (Generic, NFData, Show)
+
+instance ToGLenum Face where
+    toGLenum Back         = GL.GL_BACK
+    toGLenum Front        = GL.GL_FRONT
+    toGLenum FrontAndBack = GL.GL_FRONT_AND_BACK
 
 -- | Apply persistant settings. Shall only be used for global actions.
 applyPersistantSettings :: [Setting] -> IO ()
@@ -132,6 +151,9 @@ applySetting setting =
 
         DepthFunc func ->
             GL.glDepthFunc <| toGLenum func
+
+        CullFaceMode face ->
+            GL.glCullFace <| toGLenum face
 
 runReverseSettings :: [IO ()] -> IO ()
 runReverseSettings = sequence_
@@ -184,6 +206,12 @@ makeReverseSetting setting =
         DepthFunc _ -> do
             val <- getEnum GL.GL_DEPTH_FUNC
             return <| GL.glDepthFunc val
+
+        -- Just fetch the current cull face mode, and set it in the
+        -- reverse setting.
+        CullFaceMode _ -> do
+            val <- getEnum GL.GL_CULL_FACE_MODE
+            return <| GL.glCullFace val
 
 emptyReverseSetting :: IO ()
 emptyReverseSetting = return ()

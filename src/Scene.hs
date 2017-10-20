@@ -11,7 +11,9 @@ module Scene
     , Capability (..)
     , Configuration (..)
     , DisplayMode (..)
+    , DepthFunction (..)
     , Entity (..)
+    , Face (..)
     , Event (..)
     , Mesh
     , MeshRequest (..)
@@ -39,6 +41,7 @@ import           Scene.GL.Mesh      (Mesh, MeshRequest (..), Primitive (..))
 import           Scene.GL.Program   (Program, ProgramRequest (..),
                                      ShaderType (..))
 import           Scene.GL.Setting   (BufferBit (..), Capability (..),
+                                     DepthFunction (..), Face (..),
                                      Setting (..))
 import           Scene.GL.Uniform   (Uniform (..), UniformValue (..))
 import           Scene.Kernel       (Configuration (..), defaultConfiguration,
