@@ -17,6 +17,7 @@ module Scene
     , Event (..)
     , Mesh
     , MeshRequest (..)
+    , PolygonMode (..)
     , Primitive (..)
     , Program
     , ProgramRequest (..)
@@ -42,7 +43,7 @@ import           Scene.GL.Program   (Program, ProgramRequest (..),
                                      ShaderType (..))
 import           Scene.GL.Setting   (BufferBit (..), Capability (..),
                                      DepthFunction (..), Face (..),
-                                     Setting (..))
+                                     PolygonMode (..), Setting (..))
 import           Scene.GL.Uniform   (Uniform (..), UniformValue (..))
 import           Scene.Kernel       (Configuration (..), defaultConfiguration,
                                      viewScenes)

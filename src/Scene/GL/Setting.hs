@@ -15,6 +15,7 @@ module Scene.GL.Setting
     , Capability (..)
     , DepthFunction (..)
     , Face (..)
+    , PolygonMode (..)
     , applyPersistantSettings
     , withTemporarySettings
     ) where
@@ -46,6 +47,8 @@ data Setting
     -- ^ Setting the function for depth comparison (default: Less)
     | SetCullFace !Face
     -- ^ Setting the facet cull mode (default: Back).
+    | SetPolygonMode !Face !PolygonMode
+    -- ^ Setting the polygon mode (default: Fill).
     deriving (Generic, NFData, Show)
 
 -- | Buffer bits.
@@ -99,7 +102,7 @@ instance ToGLenum DepthFunction where
     toGLenum Always         = GL.GL_ALWAYS
 
 -- | Specification of faces to cull. Front face is a face with vertices
--- rendered in counter clock-wise order.
+-- rendered in counter clock-wise order. Back is OpenGL's initial value.
 data Face
     = Back
     | Front
@@ -110,6 +113,18 @@ instance ToGLenum Face where
     toGLenum Back         = GL.GL_BACK
     toGLenum Front        = GL.GL_FRONT
     toGLenum FrontAndBack = GL.GL_FRONT_AND_BACK
+
+-- | Specify how to render polygons. Fill is OpenGL's initial mode.
+data PolygonMode
+    = Point
+    | Line
+    | Fill
+    deriving (Generic, NFData, Show)
+
+instance ToGLenum PolygonMode where
+    toGLenum Point = GL.GL_POINT
+    toGLenum Line  = GL.GL_LINE
+    toGLenum Fill  = GL.GL_FILL
 
 -- | Apply persistant settings. Shall only be used for global actions.
 applyPersistantSettings :: [Setting] -> IO ()
@@ -154,6 +169,9 @@ applySetting setting =
 
         SetCullFace face ->
             GL.glCullFace <| toGLenum face
+
+        SetPolygonMode face polygonMode ->
+            GL.glPolygonMode (toGLenum face) (toGLenum polygonMode)
 
 runReverseSettings :: [IO ()] -> IO ()
 runReverseSettings = sequence_
@@ -213,6 +231,12 @@ makeReverseSetting setting =
             val <- getEnum GL.GL_CULL_FACE_MODE
             return <| GL.glCullFace val
 
+        -- Just fetch the current polygon mode values, and set them in the
+        -- reverse setting.
+        SetPolygonMode _ _ -> do
+            (val1, val2) <- getTwoEnums GL.GL_POLYGON_MODE
+            return <| GL.glPolygonMode val1 val2
+
 emptyReverseSetting :: IO ()
 emptyReverseSetting = return ()
 
@@ -235,5 +259,17 @@ getInteger enum =
         GL.glGetIntegerv enum ptr
         head <$> peekArray 1 ptr
 
+getTwoIntegers :: GL.GLenum -> IO (GL.GLint, GL.GLint)
+getTwoIntegers enum =
+    withArray [0, 0] $ \ptr -> do
+        GL.glGetIntegerv enum ptr
+        [v1, v2] <- peekArray 2 ptr
+        return (v1, v2)
+
 getEnum :: GL.GLenum -> IO GL.GLenum
 getEnum enum = fromIntegral <$> getInteger enum
+
+getTwoEnums :: GL.GLenum -> IO (GL.GLenum, GL.GLenum)
+getTwoEnums enum = do
+    (v1, v2) <- getTwoIntegers enum
+    return (fromIntegral v1, fromIntegral v2)
