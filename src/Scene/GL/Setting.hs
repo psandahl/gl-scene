@@ -30,9 +30,9 @@ import           Scene.GL.Types  (ToGLbitfield (..), ToGLenum (..))
 
 -- | Settings are used to manipulate the GL state machine.
 data Setting
-    = ClearColor !GL.GLfloat !GL.GLfloat !GL.GLfloat !GL.GLfloat
+    = SetClearColor !GL.GLfloat !GL.GLfloat !GL.GLfloat !GL.GLfloat
     -- ^ Setting the color used for clearing the framebuffer (default: 0 0 0 0).
-    | ClearDepth !GL.GLfloat
+    | SetClearDepth !GL.GLfloat
     -- ^ Setting the depth value used for clearing the framebuffer (default: 1).
     | Clear ![BufferBit]
     -- ^ Clear the specified buffers identified by 'BufferBit'.
@@ -40,11 +40,11 @@ data Setting
     -- ^ Enable a 'Capability'.
     | Disable !Capability
     -- ^ Disable a 'Capability'.
-    | DepthMask !Bool
+    | SetDepthMask !Bool
     -- ^ Specify whether the depth buffer is enabled for writing (default: True).
-    | DepthFunc !DepthFunction
+    | SetDepthFunc !DepthFunction
     -- ^ Setting the function for depth comparison (default: Less)
-    | CullFaceMode !Face
+    | SetCullFace !Face
     -- ^ Setting the facet cull mode (default: Back).
     deriving (Generic, NFData, Show)
 
@@ -131,10 +131,10 @@ applySettings = mapM_ applySetting
 applySetting :: Setting -> IO ()
 applySetting setting =
     case setting of
-        ClearColor r g b a ->
+        SetClearColor r g b a ->
             GL.glClearColor r g b a
 
-        ClearDepth v ->
+        SetClearDepth v ->
             GL.glClearDepthf v
 
         Clear bufferBits ->
@@ -146,13 +146,13 @@ applySetting setting =
         Disable cap ->
             GL.glDisable <| toGLenum cap
 
-        DepthMask val ->
+        SetDepthMask val ->
             GL.glDepthMask <| toGLboolean val
 
-        DepthFunc func ->
+        SetDepthFunc func ->
             GL.glDepthFunc <| toGLenum func
 
-        CullFaceMode face ->
+        SetCullFace face ->
             GL.glCullFace <| toGLenum face
 
 runReverseSettings :: [IO ()] -> IO ()
@@ -168,11 +168,11 @@ makeReverseSetting :: Setting -> IO (IO ())
 makeReverseSetting setting =
     case setting of
         -- ClearColor have no reverse setting.
-        ClearColor {} ->
+        SetClearColor {} ->
             return emptyReverseSetting
 
         -- ClearDepth have no reverse setting.
-        ClearDepth _ ->
+        SetClearDepth _ ->
             return emptyReverseSetting
 
         -- Clear have no reverse setting.
@@ -197,19 +197,19 @@ makeReverseSetting setting =
 
         -- Just fetch the current depth mask status, and set it in the
         -- reverse setting.
-        DepthMask _ -> do
+        SetDepthMask _ -> do
             val <- getBoolean GL.GL_DEPTH_WRITEMASK
             return <| GL.glDepthMask val
 
         -- Just fetch the current depth function, and set it in the
         -- reverse setting.
-        DepthFunc _ -> do
+        SetDepthFunc _ -> do
             val <- getEnum GL.GL_DEPTH_FUNC
             return <| GL.glDepthFunc val
 
         -- Just fetch the current cull face mode, and set it in the
         -- reverse setting.
-        CullFaceMode _ -> do
+        SetCullFace _ -> do
             val <- getEnum GL.GL_CULL_FACE_MODE
             return <| GL.glCullFace val
 
