@@ -24,7 +24,7 @@ subscribeToMandatoryCallbacks runtime = do
     GLFW.setWindowSizeCallback (Runtime.window runtime) $ Just (windowSizeCallback runtime)
 
 errorCallback :: Runtime -> Error -> String -> IO ()
-errorCallback _runtime _error _str = return ()
+errorCallback _runtime _error str = print str
 
 windowSizeCallback :: Runtime -> Window -> Int -> Int -> IO ()
 windowSizeCallback runtime _window width' height' =

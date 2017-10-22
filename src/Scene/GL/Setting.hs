@@ -233,9 +233,12 @@ makeReverseSetting setting =
 
         -- Just fetch the current polygon mode values, and set them in the
         -- reverse setting.
-        SetPolygonMode _ _ -> do
-            (val1, val2) <- getTwoEnums GL.GL_POLYGON_MODE
-            return <| GL.glPolygonMode val1 val2
+        SetPolygonMode face _ -> do
+            -- TODO: I belive there's a bug in the GL driver. Both values
+            -- returned are describing the mode, and none of the values are
+            -- describing the face.
+            (_val1, val2) <- getTwoEnums GL.GL_POLYGON_MODE
+            return <| GL.glPolygonMode (toGLenum face) val2
 
 emptyReverseSetting :: IO ()
 emptyReverseSetting = return ()
