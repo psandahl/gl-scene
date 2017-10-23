@@ -7,6 +7,8 @@
 -- Portability: portable
 module Scene
     ( Attribute (..)
+    , BlendEquation (..)
+    , BlendFunction (..)
     , BufferBit (..)
     , Capability (..)
     , Configuration (..)
@@ -41,7 +43,8 @@ import           Scene.GL.Attribute (Attribute (..))
 import           Scene.GL.Mesh      (Mesh, MeshRequest (..), Primitive (..))
 import           Scene.GL.Program   (Program, ProgramRequest (..),
                                      ShaderType (..))
-import           Scene.GL.Setting   (BufferBit (..), Capability (..),
+import           Scene.GL.Setting   (BlendEquation (..), BlendFunction (..),
+                                     BufferBit (..), Capability (..),
                                      DepthFunction (..), Face (..),
                                      PolygonMode (..), Setting (..))
 import           Scene.GL.Uniform   (Uniform (..), UniformValue (..))

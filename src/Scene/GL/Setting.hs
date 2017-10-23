@@ -11,6 +11,8 @@
 -- The Action module provides GL actions to manipulate the GL state machine.
 module Scene.GL.Setting
     ( Setting (..)
+    , BlendEquation (..)
+    , BlendFunction (..)
     , BufferBit (..)
     , Capability (..)
     , DepthFunction (..)
@@ -49,6 +51,10 @@ data Setting
     -- ^ Setting the facet cull mode (default: Back).
     | SetPolygonMode !Face !PolygonMode
     -- ^ Setting the polygon mode (default: Fill).
+    | SetBlendEquationSeparate !BlendEquation !BlendEquation
+    -- ^ Setting the blending equation, rgb and alpha separate.
+    | SetBlendFuncSeparate !BlendFunction !BlendFunction !BlendFunction !BlendFunction
+    -- ^ Setting the blending function, Srgb, Drgb, Salpha, and Dalpha separate.
     deriving (Generic, NFData, Show)
 
 -- | Buffer bits.
@@ -65,11 +71,13 @@ instance ToGLbitfield BufferBit where
 data Capability
     = DepthTest
     | CullFace
+    | Blend
     deriving (Generic, NFData, Show)
 
 instance ToGLenum Capability where
     toGLenum DepthTest = GL.GL_DEPTH_TEST
     toGLenum CullFace  = GL.GL_CULL_FACE
+    toGLenum Blend     = GL.GL_BLEND
 
 -- | Depth functions.
 data DepthFunction
@@ -126,6 +134,48 @@ instance ToGLenum PolygonMode where
     toGLenum Line  = GL.GL_LINE
     toGLenum Fill  = GL.GL_FILL
 
+-- | Specify blend equation for blending.
+data BlendEquation
+    = FuncAdd
+    | FuncSubtract
+    | FuncReverseSubtract
+    | Min
+    | Max
+    deriving (Generic, NFData, Show)
+
+instance ToGLenum BlendEquation where
+    toGLenum FuncAdd             = GL.GL_FUNC_ADD
+    toGLenum FuncSubtract        = GL.GL_FUNC_SUBTRACT
+    toGLenum FuncReverseSubtract = GL.GL_FUNC_REVERSE_SUBTRACT
+    toGLenum Min                 = GL.GL_MIN
+    toGLenum Max                 = GL.GL_MAX
+
+-- | Specify blend function for blending.
+data BlendFunction
+    = Zero
+    | One
+    | SrcColor
+    | OneMinusSrcColor
+    | DstColor
+    | OneMinusDstColor
+    | SrcAlpha
+    | OneMinusSrcAlpha
+    | DstAlpha
+    | OneMinusDstAlpha
+    deriving (Generic, NFData, Show)
+
+instance ToGLenum BlendFunction where
+    toGLenum Zero             = GL.GL_ZERO
+    toGLenum One              = GL.GL_ONE
+    toGLenum SrcColor         = GL.GL_SRC_COLOR
+    toGLenum OneMinusSrcColor = GL.GL_ONE_MINUS_SRC_COLOR
+    toGLenum DstColor         = GL.GL_DST_COLOR
+    toGLenum OneMinusDstColor = GL.GL_ONE_MINUS_DST_COLOR
+    toGLenum SrcAlpha         = GL.GL_SRC_ALPHA
+    toGLenum OneMinusSrcAlpha = GL.GL_ONE_MINUS_SRC_ALPHA
+    toGLenum DstAlpha         = GL.GL_DST_ALPHA
+    toGLenum OneMinusDstAlpha = GL.GL_ONE_MINUS_DST_ALPHA
+
 -- | Apply persistant settings. Shall only be used for global actions.
 applyPersistantSettings :: [Setting] -> IO ()
 applyPersistantSettings = applySettings
@@ -172,6 +222,13 @@ applySetting setting =
 
         SetPolygonMode face polygonMode ->
             GL.glPolygonMode (toGLenum face) (toGLenum polygonMode)
+
+        SetBlendEquationSeparate rgb alpha ->
+            GL.glBlendEquationSeparate (toGLenum rgb) (toGLenum alpha)
+
+        SetBlendFuncSeparate srgb drgb salpha dalpha ->
+            GL.glBlendFuncSeparate (toGLenum srgb) (toGLenum drgb)
+                                   (toGLenum salpha) (toGLenum dalpha)
 
 runReverseSettings :: [IO ()] -> IO ()
 runReverseSettings = sequence_
@@ -239,6 +296,22 @@ makeReverseSetting setting =
             -- describing the face.
             (_val1, val2) <- getTwoEnums GL.GL_POLYGON_MODE
             return <| GL.glPolygonMode (toGLenum face) val2
+
+        -- | Just fetch the current blend equations, and set them in the
+        -- reverse setting.
+        SetBlendEquationSeparate {} -> do
+            rgb <- getEnum GL.GL_BLEND_EQUATION_RGB
+            alpha <- getEnum GL.GL_BLEND_EQUATION_ALPHA
+            return <| GL.glBlendEquationSeparate rgb alpha
+
+        -- | Just fetch the current blend functions, and set them in the
+        -- reverse setting.
+        SetBlendFuncSeparate {} -> do
+            srgb <- getEnum GL.GL_BLEND_SRC_RGB
+            drgb <- getEnum GL.GL_BLEND_DST_RGB
+            salpha <- getEnum GL.GL_BLEND_SRC_ALPHA
+            dalpha <- getEnum GL.GL_BLEND_DST_ALPHA
+            return <| GL.glBlendFuncSeparate srgb drgb salpha dalpha
 
 emptyReverseSetting :: IO ()
 emptyReverseSetting = return ()
