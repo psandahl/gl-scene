@@ -26,6 +26,11 @@ module Scene
     , Setting (..)
     , Scene (..)
     , ShaderType (..)
+    , TextureFormat (..)
+    , TextureMagFilter (..)
+    , TextureMinFilter (..)
+    , TextureWrap (..)
+    , TextureRequest (..)
     , Uniform (..)
     , UniformValue (..)
     , Viewer
@@ -47,6 +52,9 @@ import           Scene.GL.Setting   (BlendEquation (..), BlendFunction (..),
                                      BufferBit (..), Capability (..),
                                      DepthFunction (..), Face (..),
                                      PolygonMode (..), Setting (..))
+import           Scene.GL.Texture   (TextureFormat (..), TextureMagFilter (..),
+                                     TextureMinFilter (..), TextureRequest (..),
+                                     TextureWrap (..))
 import           Scene.GL.Uniform   (Uniform (..), UniformValue (..))
 import           Scene.Kernel       (Configuration (..), defaultConfiguration,
                                      viewScenes)
