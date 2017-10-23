@@ -38,6 +38,7 @@ library
                      , flow
                      , gl
                      , GLFW-b
+                     , JuicyPixels
                      , linear
                      , mtl
                      , stm
