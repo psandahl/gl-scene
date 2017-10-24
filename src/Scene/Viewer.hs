@@ -49,7 +49,7 @@ data Viewer = Viewer
     , meshRequest    :: !(TQueue MeshRequest)
     , meshReply      :: !(TQueue Mesh)
     , textureRequest :: !(TQueue (TextureRequest DynamicImage))
-    , textureReply   :: !(TQueue (Either String Texture))
+    , textureReply   :: !(TQueue Texture)
     }
 
 -- | Request the renderer to close. This state change is unconditional, when
@@ -101,7 +101,7 @@ textureFromRequest viewer request = do
         Right image -> do
             atomically <| writeTQueue (textureRequest viewer) $!!
                 request { textureSource = image }
-            atomically <| readTQueue (textureReply viewer)
+            Right <$> (atomically <| readTQueue (textureReply viewer))
 
         Left err -> return $ Left err
 

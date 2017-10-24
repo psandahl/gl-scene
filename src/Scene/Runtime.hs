@@ -30,6 +30,7 @@ import qualified Scene.GL.Mesh          as Mesh
 import           Scene.GL.Program       (Program, ProgramRequest)
 import qualified Scene.GL.Program       as Program
 import           Scene.GL.Texture       (Texture, TextureRequest)
+import qualified Scene.GL.Texture       as Texture
 import           Scene.Scene            (Scene)
 import           Scene.Types            (Event, RenderState, Viewport)
 
@@ -45,7 +46,7 @@ data Runtime = Runtime
     , meshRequest    :: !(TQueue MeshRequest)
     , meshReply      :: !(TQueue Mesh)
     , textureRequest :: !(TQueue (TextureRequest DynamicImage))
-    , textureReply   :: !(TQueue (Either String Texture))
+    , textureReply   :: !(TQueue Texture)
     }
 
 -- | Get the 'Viewport' value.
@@ -84,6 +85,9 @@ scanRequests runtime = do
     maybe (return ()) (handleMeshRequest runtime) =<<
         (atomically <| tryReadTQueue (meshRequest runtime))
 
+    maybe (return ()) (handleTextureRequest runtime) =<<
+        (atomically <| tryReadTQueue (textureRequest runtime))
+
 handleProgramRequest :: Runtime -> ProgramRequest ByteString -> IO ()
 handleProgramRequest runtime request = do
     result <- Program.fromRequest request
@@ -93,3 +97,8 @@ handleMeshRequest :: Runtime -> MeshRequest -> IO ()
 handleMeshRequest runtime request = do
     result <- Mesh.fromRequest request
     atomically <| writeTQueue (meshReply runtime) $!! result
+
+handleTextureRequest :: Runtime -> TextureRequest DynamicImage -> IO ()
+handleTextureRequest runtime request = do
+    result <- Texture.fromRequest request
+    atomically <| writeTQueue (textureReply runtime) $!! result
