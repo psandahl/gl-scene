@@ -26,6 +26,7 @@ module Scene
     , Setting (..)
     , Scene (..)
     , ShaderType (..)
+    , Texture
     , TextureFormat (..)
     , TextureMagFilter (..)
     , TextureMinFilter (..)
@@ -52,7 +53,8 @@ import           Scene.GL.Setting   (BlendEquation (..), BlendFunction (..),
                                      BufferBit (..), Capability (..),
                                      DepthFunction (..), Face (..),
                                      PolygonMode (..), Setting (..))
-import           Scene.GL.Texture   (TextureFormat (..), TextureMagFilter (..),
+import           Scene.GL.Texture   (Texture, TextureFormat (..),
+                                     TextureMagFilter (..),
                                      TextureMinFilter (..), TextureRequest (..),
                                      TextureWrap (..))
 import           Scene.GL.Uniform   (Uniform (..), UniformValue (..))

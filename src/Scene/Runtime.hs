@@ -17,6 +17,7 @@ module Scene.Runtime
     , scanRequests
     ) where
 
+import           Codec.Picture          (DynamicImage)
 import           Control.Concurrent.STM (TQueue, TVar, atomically, readTVarIO,
                                          tryReadTQueue, writeTQueue)
 import           Control.DeepSeq        (($!!))
@@ -28,6 +29,7 @@ import           Scene.GL.Mesh          (Mesh, MeshRequest)
 import qualified Scene.GL.Mesh          as Mesh
 import           Scene.GL.Program       (Program, ProgramRequest)
 import qualified Scene.GL.Program       as Program
+import           Scene.GL.Texture       (Texture, TextureRequest)
 import           Scene.Scene            (Scene)
 import           Scene.Types            (Event, RenderState, Viewport)
 
@@ -42,6 +44,8 @@ data Runtime = Runtime
     , programReply   :: !(TQueue (Either String Program))
     , meshRequest    :: !(TQueue MeshRequest)
     , meshReply      :: !(TQueue Mesh)
+    , textureRequest :: !(TQueue (TextureRequest DynamicImage))
+    , textureReply   :: !(TQueue (Either String Texture))
     }
 
 -- | Get the 'Viewport' value.

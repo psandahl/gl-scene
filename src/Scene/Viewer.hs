@@ -14,6 +14,7 @@ module Scene.Viewer
     , programFromFiles
     , programFromByteStrings
     , meshFromRequest
+    , textureFromRequest
     , waitOnTermination
     , setScene
     , setRenderState
@@ -21,6 +22,7 @@ module Scene.Viewer
     , getNextEvent
     ) where
 
+import           Codec.Picture            (DynamicImage, readImage)
 import           Control.Concurrent.Async (Async, wait)
 import           Control.Concurrent.STM   (TQueue, TVar, atomically, readTQueue,
                                            readTVarIO, writeTQueue, writeTVar)
@@ -30,6 +32,8 @@ import           Flow                     ((<|))
 import           Scene.GL.Mesh            (Mesh, MeshRequest,
                                            hasNonEmptyVectors)
 import           Scene.GL.Program         (Program, ProgramRequest, readSources)
+import           Scene.GL.Texture         (Texture,
+                                           TextureRequest (textureSource))
 import           Scene.Scene              (Scene)
 import           Scene.Types              (Event, RenderState (..))
 
@@ -44,6 +48,8 @@ data Viewer = Viewer
     , programReply   :: !(TQueue (Either String Program))
     , meshRequest    :: !(TQueue MeshRequest)
     , meshReply      :: !(TQueue Mesh)
+    , textureRequest :: !(TQueue (TextureRequest DynamicImage))
+    , textureReply   :: !(TQueue (Either String Texture))
     }
 
 -- | Request the renderer to close. This state change is unconditional, when
@@ -57,7 +63,7 @@ setScene viewer scene =
     atomically <| writeTVar (currentScene viewer) $!! scene
 {-# INLINE setScene #-}
 
--- | Load a program from source files. All file i/o is performed in the
+-- | Load a 'Program' from source files. All file i/o is performed in the
 -- application thread.
 programFromFiles :: Viewer -> ProgramRequest FilePath
                  -> IO (Either String Program)
@@ -69,7 +75,7 @@ programFromFiles viewer request = do
 
         Left err         -> return $ Left err
 
--- | Load a program from 'ByteString's.
+-- | Load a 'Program' from 'ByteString's.
 programFromByteStrings :: Viewer -> ProgramRequest ByteString
                        -> IO (Either String Program)
 programFromByteStrings viewer request = do
@@ -84,6 +90,20 @@ meshFromRequest viewer request =
             atomically <| writeTQueue (meshRequest viewer) $!! request
             Right <$> (atomically <| readTQueue (meshReply viewer))
         else return $ Left "MeshRequest must not have empty vectors"
+
+-- | Load a 'Texture' from a 'TextureRequest'. All file i/o is performed in
+-- the application thread.
+textureFromRequest :: Viewer -> TextureRequest FilePath
+                   -> IO (Either String Texture)
+textureFromRequest viewer request = do
+    result <- readImage (textureSource request)
+    case result of
+        Right image -> do
+            atomically <| writeTQueue (textureRequest viewer) $!!
+                request { textureSource = image }
+            atomically <| readTQueue (textureReply viewer)
+
+        Left err -> return $ Left err
 
 -- | Wait until the render thread has terminated.
 waitOnTermination :: Viewer -> IO ()
