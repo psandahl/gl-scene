@@ -37,6 +37,7 @@ module Scene
     , Viewer
     , Viewport (..)
     , defaultConfiguration
+    , defaultTextureRequest
     , viewScenes
     , close
     , meshFromRequest
@@ -56,7 +57,7 @@ import           Scene.GL.Setting   (BlendEquation (..), BlendFunction (..),
 import           Scene.GL.Texture   (Texture, TextureFormat (..),
                                      TextureMagFilter (..),
                                      TextureMinFilter (..), TextureRequest (..),
-                                     TextureWrap (..))
+                                     TextureWrap (..), defaultTextureRequest)
 import           Scene.GL.Uniform   (Uniform (..), UniformValue (..))
 import           Scene.Kernel       (Configuration (..), defaultConfiguration,
                                      viewScenes)

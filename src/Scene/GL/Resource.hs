@@ -10,6 +10,8 @@ module Scene.GL.Resource
     , genBuffer
     , delVertexArray
     , delBuffer
+    , genTexture
+    , delTexture
     ) where
 
 import           Foreign     (Ptr, peekArray, withArray)
@@ -19,17 +21,25 @@ import           Graphics.GL as GL
 genVertexArray :: IO GL.GLuint
 genVertexArray = genResource GL.glGenVertexArrays
 
--- | Generate a buffer object.
-genBuffer :: IO GL.GLuint
-genBuffer = genResource GL.glGenBuffers
-
 -- | Delete a vertex array object (VAO).
 delVertexArray :: GL.GLuint -> IO ()
 delVertexArray = delResource GL.glDeleteVertexArrays
 
+-- | Generate a buffer object.
+genBuffer :: IO GL.GLuint
+genBuffer = genResource GL.glGenBuffers
+
 -- | Delete a buffer object.
 delBuffer :: GL.GLuint -> IO ()
 delBuffer = delResource GL.glDeleteBuffers
+
+-- | Generate a texture object.
+genTexture :: IO GL.GLuint
+genTexture = genResource GL.glGenTextures
+
+-- | Delete a texture object.
+delTexture :: GL.GLuint -> IO ()
+delTexture = delResource GL.glDeleteTextures
 
 -- | OpenGL resources are allocated as arrays or the resource. This helper
 -- function just makes single resources.

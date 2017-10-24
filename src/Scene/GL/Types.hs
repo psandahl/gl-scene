@@ -8,6 +8,7 @@
 module Scene.GL.Types
     ( ToGLenum (..)
     , ToGLbitfield (..)
+    , ToGLint (..)
     ) where
 
 import qualified Graphics.GL as GL
@@ -19,3 +20,7 @@ class ToGLenum a where
 -- | Typeclass for conversion of high level type to 'GL.GLbitfield'.
 class ToGLbitfield a where
     toGLbitfield :: a -> GL.GLbitfield
+
+-- | Typeclass for conversion of high level type to 'GL.GLint'.
+class ToGLint a where
+    toGLint :: a -> GL.GLint
