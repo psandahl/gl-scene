@@ -27,6 +27,7 @@ module Scene
     , Scene (..)
     , ShaderType (..)
     , Texture
+    , TextureBinding (..)
     , TextureFormat (..)
     , TextureMagFilter (..)
     , TextureMinFilter (..)
@@ -44,6 +45,7 @@ module Scene
     , programFromFiles
     , programFromByteStrings
     , setScene
+    , textureFromRequest
     ) where
 
 import           Scene.GL.Attribute (Attribute (..))
@@ -54,8 +56,8 @@ import           Scene.GL.Setting   (BlendEquation (..), BlendFunction (..),
                                      BufferBit (..), Capability (..),
                                      DepthFunction (..), Face (..),
                                      PolygonMode (..), Setting (..))
-import           Scene.GL.Texture   (Texture, TextureFormat (..),
-                                     TextureMagFilter (..),
+import           Scene.GL.Texture   (Texture, TextureBinding (..),
+                                     TextureFormat (..), TextureMagFilter (..),
                                      TextureMinFilter (..), TextureRequest (..),
                                      TextureWrap (..), defaultTextureRequest)
 import           Scene.GL.Uniform   (Uniform (..), UniformValue (..))
@@ -66,4 +68,4 @@ import           Scene.Types        (DisplayMode (..), Event (..),
                                      Viewport (..))
 import           Scene.Viewer       (Viewer, close, meshFromRequest,
                                      programFromByteStrings, programFromFiles,
-                                     setScene)
+                                     setScene, textureFromRequest)

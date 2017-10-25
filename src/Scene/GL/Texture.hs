@@ -25,7 +25,7 @@ module Scene.GL.Texture
 import           Codec.Picture        (DynamicImage, Image (..), Pixel,
                                        PixelRGB8, PixelRGBA8, convertRGB8,
                                        convertRGBA8, imageData)
-import           Codec.Picture.Extra  (flipHorizontally)
+import           Codec.Picture.Extra  (flipVertically)
 import           Control.DeepSeq      (NFData)
 import           Control.Monad        (when)
 import qualified Data.Vector.Storable as Vector
@@ -186,5 +186,5 @@ loadTexture2DRGBA8 flipTexture' image =
                         GL.GL_RGBA GL.GL_UNSIGNED_BYTE . castPtr
 
 flipImage :: Pixel a => Bool -> Image a -> Image a
-flipImage True  = flipHorizontally
+flipImage True  = flipVertically
 flipImage False = id
