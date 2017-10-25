@@ -9,6 +9,7 @@
 -- Portability: portable
 module Scene.GL.Texture
     ( Texture
+    , TextureBinding (..)
     , TextureFormat (..)
     , TextureMagFilter (..)
     , TextureMinFilter (..)
@@ -16,6 +17,9 @@ module Scene.GL.Texture
     , TextureRequest (..)
     , defaultTextureRequest
     , fromRequest
+    , enable
+    , disable
+    , delete
     ) where
 
 import           Codec.Picture        (DynamicImage, Image (..), Pixel,
@@ -29,12 +33,20 @@ import           Flow                 ((<|))
 import           Foreign              (castPtr)
 import           GHC.Generics         (Generic)
 import qualified Graphics.GL          as GL
-import           Scene.GL.Resource    (genTexture)
+import           Scene.GL.Resource    (delTexture, genTexture)
 import           Scene.GL.Types       (ToGLint (..))
 
 -- | A representation of a texture. The 'Texture' type is opaque to the user.
 data Texture = Texture
-    { textureId :: !GL.GLuint
+    { textureId   :: !GL.GLuint
+    , textureType :: !GL.GLenum
+    } deriving (Eq, Generic, NFData, Show)
+
+-- | A binding between a 'Texture' and a texture unit. A texture unit is the value
+-- you also give to the shader sampler.
+data TextureBinding = TextureBinding
+    { texture :: !Texture
+    , unit    :: !GL.GLint
     } deriving (Eq, Generic, NFData, Show)
 
 -- | Texture format; RGB or RGBA.
@@ -114,8 +126,8 @@ defaultTextureRequest path =
 -- | Create a 'Texture' from a 'TextureRequest'.
 fromRequest :: TextureRequest DynamicImage -> IO Texture
 fromRequest request = do
-    texture <- genTexture
-    GL.glBindTexture GL.GL_TEXTURE_2D texture
+    tex <- genTexture
+    GL.glBindTexture GL.GL_TEXTURE_2D tex
     loadTexture2D request
 
     when (genMipmaps request) $
@@ -128,7 +140,23 @@ fromRequest request = do
     GL.glTexParameterf GL.GL_TEXTURE_2D GL.GL_TEXTURE_LOD_BIAS <| lodBias request
 
     GL.glBindTexture GL.GL_TEXTURE_2D 0
-    return Texture { textureId = texture }
+    return Texture { textureId = tex, textureType = GL.GL_TEXTURE_2D }
+
+-- | Enable a 'Texture' using the binding.
+enable :: TextureBinding -> IO ()
+enable binding = do
+    GL.glActiveTexture <| GL.GL_TEXTURE0 + fromIntegral (unit binding)
+    GL.glBindTexture (textureType <| texture binding) (textureId <| texture binding)
+
+-- | Disable a 'Texture' using the binding.
+disable :: TextureBinding -> IO ()
+disable binding = do
+    GL.glActiveTexture <| GL.GL_TEXTURE0 + fromIntegral (unit binding)
+    GL.glBindTexture (textureType <| texture binding) 0
+
+-- | Delete the 'Texture'.
+delete :: Texture -> IO ()
+delete = delTexture . textureId
 
 loadTexture2D :: TextureRequest DynamicImage -> IO ()
 loadTexture2D request =

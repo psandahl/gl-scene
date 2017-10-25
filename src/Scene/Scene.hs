@@ -25,6 +25,8 @@ import qualified Scene.GL.Mesh    as Mesh
 import           Scene.GL.Program (Program)
 import qualified Scene.GL.Program as Program
 import           Scene.GL.Setting (Setting, withTemporarySettings)
+import           Scene.GL.Texture (TextureBinding)
+import qualified Scene.GL.Texture as Texture
 import           Scene.GL.Uniform (UniformValue)
 import           Scene.Types      (Viewport (..))
 
@@ -42,6 +44,7 @@ data Entity
         , entityProgram  :: !Program
         , entityMesh     :: !Mesh
         , entityUniforms :: ![UniformValue]
+        , entityTextures :: ![TextureBinding]
         }
     deriving (Generic, NFData, Show)
 
@@ -57,8 +60,10 @@ renderEntity :: Entity -> IO ()
 renderEntity entity@Entity {} =
     withTemporarySettings (entitySettings entity) $ do
         Program.enable <| entityProgram entity
+        mapM_ Texture.enable <| entityTextures entity
         Program.setUniforms (entityProgram entity) (entityUniforms entity)
         Mesh.enable <| entityMesh entity
         Mesh.render <| entityMesh entity
         Mesh.disable
+        mapM_ Texture.disable <| entityTextures entity
         Program.disable

@@ -38,7 +38,7 @@ import           Text.Printf           (printf)
 data Program = Program
     { programId        :: !ProgramId
     , uniformLocations :: !UniformLocationMap
-    } deriving (Generic, NFData, Show)
+    } deriving (Eq, Generic, NFData, Show)
 
 -- | A request for a 'Program' by specifying the program's shaders and the
 -- names of the program's uniforms. A program's attributes are mapped
@@ -46,13 +46,13 @@ data Program = Program
 data ProgramRequest a = ProgramRequest
     { shaders      :: ![(ShaderType, a)]
     , uniformNames :: ![Text]
-    } deriving (Generic, NFData, Show)
+    } deriving (Eq, Generic, NFData, Show)
 
 -- | Specification of a shader type.
 data ShaderType
     = Vertex
     | Fragment
-    deriving (Generic, NFData, Show)
+    deriving (Eq, Generic, NFData, Show)
 
 instance ToGLenum ShaderType where
     toGLenum Vertex   = GL.GL_VERTEX_SHADER

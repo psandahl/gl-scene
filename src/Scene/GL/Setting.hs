@@ -55,13 +55,13 @@ data Setting
     -- ^ Setting the blending equation, rgb and alpha separate.
     | SetBlendFuncSeparate !BlendFunction !BlendFunction !BlendFunction !BlendFunction
     -- ^ Setting the blending function, Srgb, Drgb, Salpha, and Dalpha separate.
-    deriving (Generic, NFData, Show)
+    deriving (Eq, Generic, NFData, Show)
 
 -- | Buffer bits.
 data BufferBit
     = ColorBufferBit
     | DepthBufferBit
-    deriving (Generic, NFData, Show)
+    deriving (Eq, Generic, NFData, Show)
 
 instance ToGLbitfield BufferBit where
     toGLbitfield ColorBufferBit = GL.GL_COLOR_BUFFER_BIT
@@ -72,7 +72,7 @@ data Capability
     = DepthTest
     | CullFace
     | Blend
-    deriving (Generic, NFData, Show)
+    deriving (Eq, Generic, NFData, Show)
 
 instance ToGLenum Capability where
     toGLenum DepthTest = GL.GL_DEPTH_TEST
@@ -97,7 +97,7 @@ data DepthFunction
     -- ^ Passes if the incoming depth value is greater than or equal to the stored depth value.
     | Always
     -- ^ Always pass.
-    deriving (Generic, NFData, Show)
+    deriving (Eq, Generic, NFData, Show)
 
 instance ToGLenum DepthFunction where
     toGLenum Never          = GL.GL_NEVER
@@ -115,7 +115,7 @@ data Face
     = Back
     | Front
     | FrontAndBack
-    deriving (Generic, NFData, Show)
+    deriving (Eq, Generic, NFData, Show)
 
 instance ToGLenum Face where
     toGLenum Back         = GL.GL_BACK
@@ -127,7 +127,7 @@ data PolygonMode
     = Point
     | Line
     | Fill
-    deriving (Generic, NFData, Show)
+    deriving (Eq, Generic, NFData, Show)
 
 instance ToGLenum PolygonMode where
     toGLenum Point = GL.GL_POINT
@@ -141,7 +141,7 @@ data BlendEquation
     | FuncReverseSubtract
     | Min
     | Max
-    deriving (Generic, NFData, Show)
+    deriving (Eq, Generic, NFData, Show)
 
 instance ToGLenum BlendEquation where
     toGLenum FuncAdd             = GL.GL_FUNC_ADD
@@ -162,7 +162,7 @@ data BlendFunction
     | OneMinusSrcAlpha
     | DstAlpha
     | OneMinusDstAlpha
-    deriving (Generic, NFData, Show)
+    deriving (Eq, Generic, NFData, Show)
 
 instance ToGLenum BlendFunction where
     toGLenum Zero             = GL.GL_ZERO

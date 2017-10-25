@@ -38,7 +38,7 @@ data Mesh = Mesh
     { theVao       :: !GL.GLuint
     , thePrimitive :: !Primitive
     , theIndices   :: !(Vector GL.GLuint)
-    } deriving (Generic, NFData, Show)
+    } deriving (Eq, Generic, NFData, Show)
 
 -- | A request for a 'Mesh' by specifying vertices, indices and primitive.
 data MeshRequest = forall a. (Attribute a, Storable a, Show a) => MeshRequest
@@ -63,7 +63,7 @@ instance Show MeshRequest where
 -- | Primitives that a 'Mesh' can represent.
 data Primitive
     = Triangles
-    deriving (Generic, NFData, Show)
+    deriving (Eq, Generic, NFData, Show)
 
 instance ToGLenum Primitive where
     toGLenum Triangles = GL.GL_TRIANGLES
