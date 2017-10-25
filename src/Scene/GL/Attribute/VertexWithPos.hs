@@ -6,7 +6,7 @@
 -- Stability: experimental
 -- Portability: portable
 module Scene.GL.Attribute.VertexWithPos
-    ( VertexWithPos (..)
+    ( Vertex (..)
     ) where
 
 import           Data.Vector.Storable as Vector
@@ -16,19 +16,19 @@ import           Linear               (V3 (..))
 import           Scene.GL.Attribute   (Attribute (..), pointerOffset)
 
 -- | A vertex with just one attribute; position.
-data VertexWithPos = VertexWithPos
+data Vertex = Vertex
     { position :: !(V3 GL.GLfloat)
     } deriving (Eq, Show)
 
 -- | Storable instance.
-instance Storable VertexWithPos where
+instance Storable Vertex where
     sizeOf = sizeOf . position
     alignment = alignment . position
-    peek ptr = VertexWithPos <$> peek (castPtr ptr)
+    peek ptr = Vertex <$> peek (castPtr ptr)
     poke ptr = poke (castPtr ptr) . position
 
 -- | Attribute instance.
-instance Attribute VertexWithPos where
+instance Attribute Vertex where
     setAttributes vertices = do
         let first = Vector.head vertices
             itemSize = sizeOf first
