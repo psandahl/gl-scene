@@ -56,6 +56,7 @@ test-suite gl-scene-test
   hs-source-dirs:      test
   main-is:             Main.hs
   other-modules:       VertexTests
+                       KernelTests
   build-depends:       base >= 4.7 && < 5
                      , gl-scene
                      , HUnit
