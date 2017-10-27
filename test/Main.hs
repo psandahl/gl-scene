@@ -3,6 +3,7 @@ module Main
     ) where
 
 
+import           KernelTests                    (smokeTest)
 import           Test.Framework                 (Test, defaultMain, testGroup)
 import           Test.Framework.Providers.HUnit (testCase)
 import           VertexTests                    (withPosAlignment,
@@ -24,5 +25,8 @@ testSuite =
         , testCase "WithPosTex sizeOf == 20" withPosTexSizeOf
         , testCase "WithPosTex alignement == 4" withPosTexAlignment
         , testCase "WithPosTex encodeDecode" withPosTexEncodeDecode
+        ]
+    , testGroup "Kernel tests"
+        [ testCase "Kernel smoke test" smokeTest
         ]
     ]
