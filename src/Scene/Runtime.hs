@@ -31,11 +31,13 @@ import           Scene.GL.Program       (Program, ProgramRequest)
 import qualified Scene.GL.Program       as Program
 import           Scene.GL.Texture       (Texture, TextureRequest)
 import qualified Scene.GL.Texture       as Texture
+import           Scene.Logger           (Logger)
 import           Scene.Scene            (Scene)
 import           Scene.Types            (Event, RenderState, Viewport)
 
 data Runtime = Runtime
     { window         :: !Window
+    , logger         :: !Logger
     , viewport       :: !(IORef Viewport)
     , frameStart     :: !Double
     , currentScene   :: !(TVar Scene)

@@ -21,10 +21,12 @@ import           Control.Monad.Except     (runExceptT, throwError)
 import           Control.Monad.IO.Class   (liftIO)
 import           Data.IORef               (newIORef)
 import           Data.Maybe               (isNothing)
+import           Flow                     ((<|))
 import           Graphics.UI.GLFW         (Window)
 import           Graphics.UI.GLFW         as GLFW
 import           Scene.Callback           (subscribeToMandatoryCallbacks)
 import           Scene.GL.Setting         (Setting, applyPersistantSettings)
+import           Scene.Logger             (closeLogger, mkLogger)
 import           Scene.Runtime            (Runtime)
 import qualified Scene.Runtime            as Runtime
 import           Scene.Scene              (Scene (..))
@@ -79,6 +81,7 @@ viewScenes configuration onInit onEvent onExit = do
         Right (window, width', height') -> do
 
             -- Create the shared data between the renderer and the application.
+            logger <- mkLogger <| debugContext configuration
             currentScene <- newTVarIO $!! initialScene configuration
             renderState <- newTVarIO $!! Initializing
             eventQueue  <- newTQueueIO
@@ -95,6 +98,7 @@ viewScenes configuration onInit onEvent onExit = do
                 renderThread (globalSettings configuration)
                     Runtime.Runtime
                         { Runtime.window = window
+                        , Runtime.logger = logger
                         , Runtime.viewport = viewport
                         , Runtime.frameStart = 0
                         , Runtime.currentScene = currentScene
@@ -112,6 +116,7 @@ viewScenes configuration onInit onEvent onExit = do
             applicationThread onInit onEvent onExit
                 Viewer.Viewer
                     { Viewer.renderThread = thread
+                    , Viewer.logger = logger
                     , Viewer.currentScene = currentScene
                     , Viewer.renderState = renderState
                     , Viewer.eventQueue = eventQueue
@@ -212,6 +217,9 @@ applicationThread onInit onEvent onExit viewer = do
 
     -- And, finally, wait for the render thread to terminate.
     Viewer.waitOnTermination viewer
+
+    -- Close the logger.
+    closeLogger <| Viewer.logger viewer
     where
         go app = do
             -- Wait for the next 'Event.'

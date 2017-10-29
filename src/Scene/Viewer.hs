@@ -10,6 +10,7 @@
 -- thread. It shares STM structures with the renderer.
 module Scene.Viewer
     ( Viewer (..)
+    , sceneLog
     , close
     , programFromFiles
     , programFromByteStrings
@@ -34,6 +35,7 @@ import           Scene.GL.Mesh            (Mesh, MeshRequest,
 import           Scene.GL.Program         (Program, ProgramRequest, readSources)
 import           Scene.GL.Texture         (Texture,
                                            TextureRequest (textureSource))
+import           Scene.Logger             (LogStr, Logger, uncheckedLog)
 import           Scene.Scene              (Scene)
 import           Scene.Types              (Event, RenderState (..))
 
@@ -41,6 +43,7 @@ import           Scene.Types              (Event, RenderState (..))
 -- the viewer library. To the user the record is opaque.
 data Viewer = Viewer
     { renderThread   :: !(Async ())
+    , logger         :: !Logger
     , currentScene   :: !(TVar Scene)
     , renderState    :: !(TVar RenderState)
     , eventQueue     :: !(TQueue Event)
@@ -51,6 +54,11 @@ data Viewer = Viewer
     , textureRequest :: !(TQueue (TextureRequest DynamicImage))
     , textureReply   :: !(TQueue Texture)
     }
+
+-- | Output a 'LogStr' to the logger.
+sceneLog :: Viewer -> LogStr -> IO ()
+sceneLog = uncheckedLog . logger
+{-# INLINE sceneLog #-}
 
 -- | Request the renderer to close. This state change is unconditional, when
 -- the application call this the application will stop. Period.

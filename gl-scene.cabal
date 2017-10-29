@@ -20,6 +20,7 @@ library
                        Scene.GL.Attribute.VertexWithPosTex
   other-modules:       Scene.Callback
                        Scene.Kernel
+                       Scene.Logger
                        Scene.Runtime
                        Scene.Scene
                        Scene.Types
