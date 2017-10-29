@@ -13,6 +13,7 @@ module Scene.Logger
     , closeLogger
     , checkedLog
     , uncheckedLog
+    , infoLog
     ) where
 
 
@@ -56,3 +57,8 @@ uncheckedLog logger logStr = do
     timeStamp <- timeCache logger
     pushLogStrLn (loggerSet logger) <| toLogStr timeStamp <> toLogStr ": " <> logStr
 {-# INLINE uncheckedLog #-}
+
+-- | Convenience function. Checked log, with String arguments.
+infoLog :: Logger -> String -> IO ()
+infoLog logger = checkedLog logger . toLogStr
+{-# INLINE infoLog #-}

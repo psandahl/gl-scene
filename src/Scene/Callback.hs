@@ -13,7 +13,8 @@ module Scene.Callback
 
 import           Graphics.UI.GLFW (Error, Window)
 import qualified Graphics.UI.GLFW as GLFW
-import           Scene.Runtime    (Runtime)
+import           Scene.Logger     (ToLogStr (..), uncheckedLog)
+import           Scene.Runtime    (Runtime (logger))
 import qualified Scene.Runtime    as Runtime
 import           Scene.Types      (Viewport (..))
 
@@ -24,7 +25,7 @@ subscribeToMandatoryCallbacks runtime = do
     GLFW.setWindowSizeCallback (Runtime.window runtime) $ Just (windowSizeCallback runtime)
 
 errorCallback :: Runtime -> Error -> String -> IO ()
-errorCallback _runtime _error str = print str
+errorCallback runtime _error = uncheckedLog (logger runtime) . toLogStr
 
 windowSizeCallback :: Runtime -> Window -> Int -> Int -> IO ()
 windowSizeCallback runtime _window width' height' =

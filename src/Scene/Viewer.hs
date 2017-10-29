@@ -35,9 +35,11 @@ import           Scene.GL.Mesh            (Mesh, MeshRequest,
 import           Scene.GL.Program         (Program, ProgramRequest, readSources)
 import           Scene.GL.Texture         (Texture,
                                            TextureRequest (textureSource))
-import           Scene.Logger             (LogStr, Logger, uncheckedLog)
+import           Scene.Logger             (LogStr, Logger, infoLog,
+                                           uncheckedLog)
 import           Scene.Scene              (Scene)
 import           Scene.Types              (Event, RenderState (..))
+import           Text.Printf              (printf)
 
 -- | The viewer record is a handle from the application to the runtime of
 -- the viewer library. To the user the record is opaque.
@@ -63,7 +65,9 @@ sceneLog = uncheckedLog . logger
 -- | Request the renderer to close. This state change is unconditional, when
 -- the application call this the application will stop. Period.
 close :: Viewer -> IO ()
-close viewer = setRenderState viewer Closing
+close viewer = do
+    infoLog (logger viewer) "gl-scene 'close' called."
+    setRenderState viewer Closing
 
 -- | Set a new 'Scene'.
 setScene :: Viewer -> Scene -> IO ()
@@ -76,6 +80,8 @@ setScene viewer scene =
 programFromFiles :: Viewer -> ProgramRequest FilePath
                  -> IO (Either String Program)
 programFromFiles viewer request = do
+    infoLog (logger viewer) <|
+        printf "gl-scene 'programFromFiles' called with=%s" (show request)
     result <- readSources request
     case result of
         Right newRequest ->
@@ -92,7 +98,8 @@ programFromByteStrings viewer request = do
 
 -- | Construct a 'Mesh' from a 'MeshRequest'.
 meshFromRequest :: Viewer -> MeshRequest -> IO (Either String Mesh)
-meshFromRequest viewer request =
+meshFromRequest viewer request = do
+    infoLog (logger viewer) "gl-scene 'meshFromRequest' called."
     if hasNonEmptyVectors request
         then do
             atomically <| writeTQueue (meshRequest viewer) $!! request
@@ -104,6 +111,8 @@ meshFromRequest viewer request =
 textureFromRequest :: Viewer -> TextureRequest FilePath
                    -> IO (Either String Texture)
 textureFromRequest viewer request = do
+    infoLog (logger viewer) <|
+        printf "gl-scene 'textureFromRequest' called with=%s" (show request)
     result <- readImage (textureSource request)
     case result of
         Right image -> do

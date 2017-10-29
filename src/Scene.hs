@@ -17,6 +17,7 @@ module Scene
     , Entity (..)
     , Face (..)
     , Event (..)
+    , LogStr
     , Mesh
     , MeshRequest (..)
     , PolygonMode (..)
@@ -33,6 +34,7 @@ module Scene
     , TextureMinFilter (..)
     , TextureWrap (..)
     , TextureRequest (..)
+    , ToLogStr (..)
     , Uniform (..)
     , UniformValue (..)
     , Viewer
@@ -44,6 +46,7 @@ module Scene
     , meshFromRequest
     , programFromFiles
     , programFromByteStrings
+    , sceneLog
     , setScene
     , textureFromRequest
     ) where
@@ -63,9 +66,10 @@ import           Scene.GL.Texture   (Texture, TextureBinding (..),
 import           Scene.GL.Uniform   (Uniform (..), UniformValue (..))
 import           Scene.Kernel       (Configuration (..), defaultConfiguration,
                                      viewScenes)
+import           Scene.Logger       (LogStr, ToLogStr (..))
 import           Scene.Scene        (Entity (..), Scene (..))
 import           Scene.Types        (DisplayMode (..), Event (..),
                                      Viewport (..))
 import           Scene.Viewer       (Viewer, close, meshFromRequest,
                                      programFromByteStrings, programFromFiles,
-                                     setScene, textureFromRequest)
+                                     sceneLog, setScene, textureFromRequest)

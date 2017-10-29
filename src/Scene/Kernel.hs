@@ -13,6 +13,7 @@ module Scene.Kernel
     , viewScenes
     ) where
 
+import           Control.Concurrent       (getNumCapabilities)
 import           Control.Concurrent.Async (asyncBound)
 import           Control.Concurrent.STM   (newTQueueIO, newTQueueIO, newTVarIO)
 import           Control.DeepSeq          (($!!))
@@ -22,11 +23,13 @@ import           Control.Monad.IO.Class   (liftIO)
 import           Data.IORef               (newIORef)
 import           Data.Maybe               (isNothing)
 import           Flow                     ((<|))
+import           GHC.Conc                 (getNumProcessors)
 import           Graphics.UI.GLFW         (Window)
 import           Graphics.UI.GLFW         as GLFW
 import           Scene.Callback           (subscribeToMandatoryCallbacks)
 import           Scene.GL.Setting         (Setting, applyPersistantSettings)
-import           Scene.Logger             (closeLogger, mkLogger)
+import           Scene.Logger             (Logger, closeLogger, infoLog,
+                                           mkLogger)
 import           Scene.Runtime            (Runtime)
 import qualified Scene.Runtime            as Runtime
 import           Scene.Scene              (Scene (..))
@@ -35,6 +38,7 @@ import           Scene.Types              (DisplayMode (..), Event (..),
                                            RenderState (..), Viewport (..))
 import           Scene.Viewer             (Viewer)
 import qualified Scene.Viewer             as Viewer
+import           Text.Printf              (printf)
 
 -- | Configuration data for the 'Viewer' window to create.
 data Configuration = Configuration
@@ -201,16 +205,25 @@ applicationThread :: (Viewer -> IO a)
                   -> Viewer
                   -> IO ()
 applicationThread onInit onEvent onExit viewer = do
+    -- Log startup information.
+    logStartUpInfo <| Viewer.logger viewer
+
     -- Let the application initialize itself.
+    infoLog (Viewer.logger viewer) "gl-scene enter onInit."
     app <- onInit viewer
+    infoLog (Viewer.logger viewer) "gl-scene exit onInit."
 
     -- Enter running state, and wait until the application chose to enter
     -- Closing state.
+    infoLog (Viewer.logger viewer) "gl-scene enter running state."
     Viewer.setRenderState viewer Running
     app' <- go app
+    infoLog (Viewer.logger viewer) "gl-scene exit running state."
 
     -- Let the application clean up stuff.
+    infoLog (Viewer.logger viewer) "gl-scene enter onExit."
     onExit viewer app'
+    infoLog (Viewer.logger viewer) "gl-scene exit onExit."
 
     -- Set the 'RenderState' to Done.
     Viewer.setRenderState viewer Done
@@ -218,7 +231,8 @@ applicationThread onInit onEvent onExit viewer = do
     -- And, finally, wait for the render thread to terminate.
     Viewer.waitOnTermination viewer
 
-    -- Close the logger.
+    -- Tell we are stopping, and then close the logger.
+    infoLog (Viewer.logger viewer) "gl-scene stop."
     closeLogger <| Viewer.logger viewer
     where
         go app = do
@@ -283,3 +297,10 @@ makeWindow configuration =
                 let Just win = win'
 
                 return (win, width', height')
+
+logStartUpInfo :: Logger -> IO ()
+logStartUpInfo logger = do
+    numProcs <- getNumProcessors
+    numThreads <- getNumCapabilities
+    infoLog logger <| printf "gl-scene start. %d thread(s). %d processor(s)"
+                             numThreads numProcs
