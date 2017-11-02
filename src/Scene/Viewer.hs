@@ -18,6 +18,8 @@ module Scene.Viewer
     , textureFromRequest
     , waitOnTermination
     , setScene
+    , subscribeKeyboard
+    , unsubscribeKeyboard
     , setRenderState
     , getRenderState
     , getNextEvent
@@ -38,23 +40,25 @@ import           Scene.GL.Texture         (Texture,
 import           Scene.Logger             (LogStr, Logger, infoLog,
                                            uncheckedLog)
 import           Scene.Scene              (Scene)
-import           Scene.Types              (Event, RenderState (..))
+import           Scene.Types              (Event, RenderState (..),
+                                           Subscription (..))
 import           Text.Printf              (printf)
 
 -- | The viewer record is a handle from the application to the runtime of
 -- the viewer library. To the user the record is opaque.
 data Viewer = Viewer
-    { renderThread   :: !(Async ())
-    , logger         :: !Logger
-    , currentScene   :: !(TVar Scene)
-    , renderState    :: !(TVar RenderState)
-    , eventQueue     :: !(TQueue Event)
-    , programRequest :: !(TQueue (ProgramRequest ByteString))
-    , programReply   :: !(TQueue (Either String Program))
-    , meshRequest    :: !(TQueue MeshRequest)
-    , meshReply      :: !(TQueue Mesh)
-    , textureRequest :: !(TQueue (TextureRequest DynamicImage))
-    , textureReply   :: !(TQueue Texture)
+    { renderThread      :: !(Async ())
+    , logger            :: !Logger
+    , currentScene      :: !(TVar Scene)
+    , renderState       :: !(TVar RenderState)
+    , subscriptionQueue :: !(TQueue Subscription)
+    , eventQueue        :: !(TQueue Event)
+    , programRequest    :: !(TQueue (ProgramRequest ByteString))
+    , programReply      :: !(TQueue (Either String Program))
+    , meshRequest       :: !(TQueue MeshRequest)
+    , meshReply         :: !(TQueue Mesh)
+    , textureRequest    :: !(TQueue (TextureRequest DynamicImage))
+    , textureReply      :: !(TQueue Texture)
     }
 
 -- | Output a 'LogStr' to the logger.
@@ -74,6 +78,18 @@ setScene :: Viewer -> Scene -> IO ()
 setScene viewer scene =
     atomically <| writeTVar (currentScene viewer) $!! scene
 {-# INLINE setScene #-}
+
+-- | Subscribe to keyboard events.
+subscribeKeyboard :: Viewer -> IO ()
+subscribeKeyboard viewer =
+    addSubscription viewer SubKeyboard
+{-# INLINE subscribeKeyboard #-}
+
+-- | Unsubscribe to keyboard events.
+unsubscribeKeyboard :: Viewer -> IO ()
+unsubscribeKeyboard viewer =
+    addSubscription viewer UnsubKeyboard
+{-# INLINE unsubscribeKeyboard #-}
 
 -- | Load a 'Program' from source files. All file i/o is performed in the
 -- application thread.
@@ -143,3 +159,7 @@ getNextEvent :: Viewer -> IO Event
 getNextEvent viewer =
     atomically <| readTQueue (eventQueue viewer)
 {-# INLINE getNextEvent #-}
+
+addSubscription :: Viewer -> Subscription -> IO ()
+addSubscription viewer sub =
+    atomically <| writeTQueue (subscriptionQueue viewer) $!! sub

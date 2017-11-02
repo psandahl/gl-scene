@@ -32,6 +32,7 @@ import           Scene.Logger             (Logger, closeLogger, infoLog,
                                            mkLogger)
 import           Scene.Runtime            (Runtime)
 import qualified Scene.Runtime            as Runtime
+import qualified Scene.Scanner            as Scanner
 import           Scene.Scene              (Scene (..))
 import qualified Scene.Scene              as Scene
 import           Scene.Types              (DisplayMode (..), Event (..),
@@ -88,6 +89,7 @@ viewScenes configuration onInit onEvent onExit = do
             logger <- mkLogger <| debugContext configuration
             currentScene <- newTVarIO $!! initialScene configuration
             renderState <- newTVarIO $!! Initializing
+            subscriptionQueue <- newTQueueIO
             eventQueue  <- newTQueueIO
             programRequest <- newTQueueIO
             programReply <- newTQueueIO
@@ -107,6 +109,7 @@ viewScenes configuration onInit onEvent onExit = do
                         , Runtime.frameStart = 0
                         , Runtime.currentScene = currentScene
                         , Runtime.renderState = renderState
+                        , Runtime.subscriptionQueue = subscriptionQueue
                         , Runtime.eventQueue = eventQueue
                         , Runtime.programRequest = programRequest
                         , Runtime.programReply = programReply
@@ -123,6 +126,7 @@ viewScenes configuration onInit onEvent onExit = do
                     , Viewer.logger = logger
                     , Viewer.currentScene = currentScene
                     , Viewer.renderState = renderState
+                    , Viewer.subscriptionQueue = subscriptionQueue
                     , Viewer.eventQueue = eventQueue
                     , Viewer.programRequest = programRequest
                     , Viewer.programReply = programReply
@@ -162,7 +166,7 @@ renderLoop = go
         go :: Runtime -> IO ()
         go runtime = do
             -- Start by scanning the request queues.
-            Runtime.scanRequests runtime
+            Scanner.scanRequests runtime
 
             Just now <- GLFW.getTime
             renderState <- Runtime.getRenderState runtime

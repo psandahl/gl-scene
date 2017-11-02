@@ -17,9 +17,12 @@ module Scene
     , Entity (..)
     , Face (..)
     , Event (..)
+    , Key (..)
+    , KeyState (..)
     , LogStr
     , Mesh
     , MeshRequest (..)
+    , ModifierKeys (..)
     , PolygonMode (..)
     , Primitive (..)
     , Program
@@ -48,9 +51,14 @@ module Scene
     , programFromByteStrings
     , sceneLog
     , setScene
+    , subscribeKeyboard
     , textureFromRequest
+    , unsubscribeKeyboard
+    , module Graphics.GL.Types
     ) where
 
+import           Graphics.GL.Types
+import           Graphics.UI.GLFW   (Key (..), KeyState (..), ModifierKeys (..))
 import           Scene.GL.Attribute (Attribute (..))
 import           Scene.GL.Mesh      (Mesh, MeshRequest (..), Primitive (..))
 import           Scene.GL.Program   (Program, ProgramRequest (..),
@@ -72,4 +80,5 @@ import           Scene.Types        (DisplayMode (..), Event (..),
                                      Viewport (..))
 import           Scene.Viewer       (Viewer, close, meshFromRequest,
                                      programFromByteStrings, programFromFiles,
-                                     sceneLog, setScene, textureFromRequest)
+                                     sceneLog, setScene, subscribeKeyboard,
+                                     textureFromRequest, unsubscribeKeyboard)

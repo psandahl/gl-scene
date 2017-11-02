@@ -22,6 +22,7 @@ library
                        Scene.Kernel
                        Scene.Logger
                        Scene.Runtime
+                       Scene.Scanner
                        Scene.Scene
                        Scene.Types
                        Scene.Viewer

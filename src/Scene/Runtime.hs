@@ -14,41 +14,38 @@ module Scene.Runtime
     , getCurrentScene
     , getRenderState
     , emitEvent
-    , scanRequests
     ) where
 
 import           Codec.Picture          (DynamicImage)
 import           Control.Concurrent.STM (TQueue, TVar, atomically, readTVarIO,
-                                         tryReadTQueue, writeTQueue)
+                                         writeTQueue)
 import           Control.DeepSeq        (($!!))
 import           Data.ByteString.Char8  (ByteString)
 import           Data.IORef             (IORef, readIORef, writeIORef)
-import           Flow                   ((<|))
 import           Graphics.UI.GLFW       (Window)
 import           Scene.GL.Mesh          (Mesh, MeshRequest)
-import qualified Scene.GL.Mesh          as Mesh
 import           Scene.GL.Program       (Program, ProgramRequest)
-import qualified Scene.GL.Program       as Program
 import           Scene.GL.Texture       (Texture, TextureRequest)
-import qualified Scene.GL.Texture       as Texture
 import           Scene.Logger           (Logger)
 import           Scene.Scene            (Scene)
-import           Scene.Types            (Event, RenderState, Viewport)
+import           Scene.Types            (Event, RenderState, Subscription,
+                                         Viewport)
 
 data Runtime = Runtime
-    { window         :: !Window
-    , logger         :: !Logger
-    , viewport       :: !(IORef Viewport)
-    , frameStart     :: !Double
-    , currentScene   :: !(TVar Scene)
-    , renderState    :: !(TVar RenderState)
-    , eventQueue     :: !(TQueue Event)
-    , programRequest :: !(TQueue (ProgramRequest ByteString))
-    , programReply   :: !(TQueue (Either String Program))
-    , meshRequest    :: !(TQueue MeshRequest)
-    , meshReply      :: !(TQueue Mesh)
-    , textureRequest :: !(TQueue (TextureRequest DynamicImage))
-    , textureReply   :: !(TQueue Texture)
+    { window            :: !Window
+    , logger            :: !Logger
+    , viewport          :: !(IORef Viewport)
+    , frameStart        :: !Double
+    , currentScene      :: !(TVar Scene)
+    , renderState       :: !(TVar RenderState)
+    , subscriptionQueue :: !(TQueue Subscription)
+    , eventQueue        :: !(TQueue Event)
+    , programRequest    :: !(TQueue (ProgramRequest ByteString))
+    , programReply      :: !(TQueue (Either String Program))
+    , meshRequest       :: !(TQueue MeshRequest)
+    , meshReply         :: !(TQueue Mesh)
+    , textureRequest    :: !(TQueue (TextureRequest DynamicImage))
+    , textureReply      :: !(TQueue Texture)
     }
 
 -- | Get the 'Viewport' value.
@@ -77,30 +74,3 @@ emitEvent :: Runtime -> Event -> IO ()
 emitEvent runtime event =
     atomically $ writeTQueue (eventQueue runtime) $!! event
 {-# INLINE emitEvent #-}
-
--- | Scan all the request queues, and handle one request per queue.
-scanRequests :: Runtime -> IO ()
-scanRequests runtime = do
-    maybe (return ()) (handleProgramRequest runtime) =<<
-        (atomically <| tryReadTQueue (programRequest runtime))
-
-    maybe (return ()) (handleMeshRequest runtime) =<<
-        (atomically <| tryReadTQueue (meshRequest runtime))
-
-    maybe (return ()) (handleTextureRequest runtime) =<<
-        (atomically <| tryReadTQueue (textureRequest runtime))
-
-handleProgramRequest :: Runtime -> ProgramRequest ByteString -> IO ()
-handleProgramRequest runtime request = do
-    result <- Program.fromRequest request
-    atomically <| writeTQueue (programReply runtime) $!! result
-
-handleMeshRequest :: Runtime -> MeshRequest -> IO ()
-handleMeshRequest runtime request = do
-    result <- Mesh.fromRequest request
-    atomically <| writeTQueue (meshReply runtime) $!! result
-
-handleTextureRequest :: Runtime -> TextureRequest DynamicImage -> IO ()
-handleTextureRequest runtime request = do
-    result <- Texture.fromRequest request
-    atomically <| writeTQueue (textureReply runtime) $!! result
