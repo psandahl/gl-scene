@@ -20,7 +20,8 @@ module Scene.Types
 
 import           Control.DeepSeq  (NFData)
 import           GHC.Generics     (Generic)
-import           Graphics.UI.GLFW (Key, KeyState, ModifierKeys)
+import           Graphics.UI.GLFW (Key, KeyState, ModifierKeys, MouseButton,
+                                   MouseButtonState)
 
 -- | Display mode for the 'Viewer' window.
 data DisplayMode
@@ -33,6 +34,8 @@ data Event
     = CloseRequest
     | Frame !Double !Viewport
     | KeyStroke !Key !KeyState !ModifierKeys
+    | MouseButton !MouseButton !MouseButtonState !ModifierKeys
+    | CursorPos !Double !Double
     deriving (Eq, Generic, NFData, Show)
 
 -- | The state which the renderer can hold. It is always the application thread
@@ -54,6 +57,10 @@ data Viewport = Viewport
 data Subscription
     = SubKeyboard
     | UnsubKeyboard
+    | SubMouseButton
+    | UnsubMouseButton
+    | SubCursorPos
+    | UnsubCursorPos
     deriving (Eq, Generic, NFData, Show)
 
 -- Orphan instances.
@@ -61,3 +68,5 @@ data Subscription
 instance NFData Key where
 instance NFData KeyState where
 instance NFData ModifierKeys where
+instance NFData MouseButton where
+instance NFData MouseButtonState where

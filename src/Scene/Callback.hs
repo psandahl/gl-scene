@@ -13,7 +13,8 @@ module Scene.Callback
     ) where
 
 import           Flow             ((<|))
-import           Graphics.UI.GLFW (Error, Key, KeyState, ModifierKeys, Window)
+import           Graphics.UI.GLFW (Error, Key, KeyState, ModifierKeys,
+                                   MouseButton, MouseButtonState, Window)
 import qualified Graphics.UI.GLFW as GLFW
 import           Scene.Logger     (ToLogStr (..), uncheckedLog)
 import           Scene.Runtime    (Runtime (logger))
@@ -36,6 +37,20 @@ subscriptionRequest runtime subscription =
 
         UnsubKeyboard -> GLFW.setKeyCallback (Runtime.window runtime) Nothing
 
+        SubMouseButton ->
+            GLFW.setMouseButtonCallback (Runtime.window runtime) <|
+                Just (mouseButtonCallback runtime)
+
+        UnsubMouseButton ->
+            GLFW.setMouseButtonCallback (Runtime.window runtime) Nothing
+
+        SubCursorPos ->
+            GLFW.setCursorPosCallback (Runtime.window runtime) <|
+                Just (cursorPosCallback runtime)
+
+        UnsubCursorPos ->
+            GLFW.setCursorPosCallback (Runtime.window runtime) Nothing
+
 errorCallback :: Runtime -> Error -> String -> IO ()
 errorCallback runtime _error = uncheckedLog (logger runtime) . toLogStr
 
@@ -46,3 +61,11 @@ windowSizeCallback runtime _window width' height' =
 keyCallback :: Runtime -> Window -> Key -> Int -> KeyState -> ModifierKeys -> IO ()
 keyCallback runtime _window key _ keyState modifierKeys =
     Runtime.emitEvent runtime <| KeyStroke key keyState modifierKeys
+
+mouseButtonCallback :: Runtime -> Window -> MouseButton -> MouseButtonState -> ModifierKeys -> IO ()
+mouseButtonCallback runtime _window button buttonState modifierKeys =
+    Runtime.emitEvent runtime <| MouseButton button buttonState modifierKeys
+
+cursorPosCallback :: Runtime -> Window -> Double -> Double -> IO ()
+cursorPosCallback runtime _window x y =
+    Runtime.emitEvent runtime <| CursorPos x y

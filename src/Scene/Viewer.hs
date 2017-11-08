@@ -20,6 +20,10 @@ module Scene.Viewer
     , setScene
     , subscribeKeyboard
     , unsubscribeKeyboard
+    , subscribeMouseButton
+    , unsubscribeMouseButton
+    , subscribeCursurPos
+    , unsubscribeCursorPos
     , setRenderState
     , getRenderState
     , getNextEvent
@@ -91,6 +95,30 @@ unsubscribeKeyboard viewer =
     addSubscription viewer UnsubKeyboard
 {-# INLINE unsubscribeKeyboard #-}
 
+-- | Subscribe to mouse button events.
+subscribeMouseButton :: Viewer -> IO ()
+subscribeMouseButton viewer =
+    addSubscription viewer SubMouseButton
+{-# INLINE subscribeMouseButton #-}
+
+-- | Unsubscribe to mouse button events.
+unsubscribeMouseButton :: Viewer -> IO ()
+unsubscribeMouseButton viewer =
+    addSubscription viewer UnsubMouseButton
+{-# INLINE unsubscribeMouseButton #-}
+
+-- | Subscribe to cursor pos events.
+subscribeCursurPos :: Viewer -> IO ()
+subscribeCursurPos viewer =
+    addSubscription viewer SubCursorPos
+{-# INLINE subscribeCursurPos #-}
+
+-- | Unsubscribe to cursor pos events.
+unsubscribeCursorPos :: Viewer -> IO ()
+unsubscribeCursorPos viewer =
+    addSubscription viewer UnsubCursorPos
+{-# INLINE unsubscribeCursorPos #-}
+
 -- | Load a 'Program' from source files. All file i/o is performed in the
 -- application thread.
 programFromFiles :: Viewer -> ProgramRequest FilePath
@@ -161,5 +189,7 @@ getNextEvent viewer =
 {-# INLINE getNextEvent #-}
 
 addSubscription :: Viewer -> Subscription -> IO ()
-addSubscription viewer sub =
+addSubscription viewer sub = do
+    infoLog (logger viewer) <|
+        printf "gl-scene: adding subscription=%s" (show sub)
     atomically <| writeTQueue (subscriptionQueue viewer) $!! sub

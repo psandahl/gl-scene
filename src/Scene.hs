@@ -52,8 +52,12 @@ module Scene
     , sceneLog
     , setScene
     , subscribeKeyboard
+    , subscribeCursurPos
+    , subscribeMouseButton
     , textureFromRequest
     , unsubscribeKeyboard
+    , unsubscribeCursorPos
+    , unsubscribeMouseButton
     , module Graphics.GL.Types
     ) where
 
@@ -80,5 +84,8 @@ import           Scene.Types        (DisplayMode (..), Event (..),
                                      Viewport (..))
 import           Scene.Viewer       (Viewer, close, meshFromRequest,
                                      programFromByteStrings, programFromFiles,
-                                     sceneLog, setScene, subscribeKeyboard,
-                                     textureFromRequest, unsubscribeKeyboard)
+                                     sceneLog, setScene, subscribeCursurPos,
+                                     subscribeKeyboard, subscribeMouseButton,
+                                     textureFromRequest, unsubscribeCursorPos,
+                                     unsubscribeKeyboard,
+                                     unsubscribeMouseButton)
