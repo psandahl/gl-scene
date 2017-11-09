@@ -22,6 +22,7 @@ import           Control.DeepSeq  (NFData)
 import           GHC.Generics     (Generic)
 import           Graphics.UI.GLFW (Key, KeyState, ModifierKeys, MouseButton,
                                    MouseButtonState)
+import           Linear           (V2)
 
 -- | Display mode for the 'Viewer' window.
 data DisplayMode
@@ -34,8 +35,8 @@ data Event
     = CloseRequest
     | Frame !Double !Viewport
     | KeyStroke !Key !KeyState !ModifierKeys
-    | MouseButton !MouseButton !MouseButtonState !ModifierKeys
-    | CursorPos !Double !Double
+    | MouseButton !MouseButton !MouseButtonState !ModifierKeys !(V2 Double)
+    | CursorPos !(V2 Double)
     deriving (Eq, Generic, NFData, Show)
 
 -- | The state which the renderer can hold. It is always the application thread

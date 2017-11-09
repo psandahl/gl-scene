@@ -16,6 +16,7 @@ import           Flow             ((<|))
 import           Graphics.UI.GLFW (Error, Key, KeyState, ModifierKeys,
                                    MouseButton, MouseButtonState, Window)
 import qualified Graphics.UI.GLFW as GLFW
+import           Linear           (V2 (..))
 import           Scene.Logger     (ToLogStr (..), uncheckedLog)
 import           Scene.Runtime    (Runtime (logger))
 import qualified Scene.Runtime    as Runtime
@@ -63,9 +64,11 @@ keyCallback runtime _window key _ keyState modifierKeys =
     Runtime.emitEvent runtime <| KeyStroke key keyState modifierKeys
 
 mouseButtonCallback :: Runtime -> Window -> MouseButton -> MouseButtonState -> ModifierKeys -> IO ()
-mouseButtonCallback runtime _window button buttonState modifierKeys =
-    Runtime.emitEvent runtime <| MouseButton button buttonState modifierKeys
+mouseButtonCallback runtime window button buttonState modifierKeys = do
+    (x, y) <- GLFW.getCursorPos window
+    Runtime.emitEvent runtime <|
+        MouseButton button buttonState modifierKeys (V2 x y)
 
 cursorPosCallback :: Runtime -> Window -> Double -> Double -> IO ()
 cursorPosCallback runtime _window x y =
-    Runtime.emitEvent runtime <| CursorPos x y
+    Runtime.emitEvent runtime <| CursorPos (V2 x y)
