@@ -23,6 +23,8 @@ module Scene
     , Mesh
     , MeshRequest (..)
     , ModifierKeys (..)
+    , MouseButton (..)
+    , MouseButtonState (..)
     , PolygonMode (..)
     , Primitive (..)
     , Program
@@ -62,7 +64,8 @@ module Scene
     ) where
 
 import           Graphics.GL.Types
-import           Graphics.UI.GLFW   (Key (..), KeyState (..), ModifierKeys (..))
+import           Graphics.UI.GLFW   (Key (..), KeyState (..), ModifierKeys (..),
+                                     MouseButton (..), MouseButtonState (..))
 import           Scene.GL.Attribute (Attribute (..))
 import           Scene.GL.Mesh      (Mesh, MeshRequest (..), Primitive (..))
 import           Scene.GL.Program   (Program, ProgramRequest (..),
