@@ -48,7 +48,7 @@ instance Attribute Vertex where
                                 (fromIntegral itemSize)
                                 (pointerOffset 0)
 
-        -- Texture coordinate attribute.
+        -- Normal attribute.
         GL.glEnableVertexAttribArray 1
         GL.glVertexAttribPointer 1 3 GL.GL_FLOAT GL.GL_FALSE
                                  (fromIntegral itemSize)

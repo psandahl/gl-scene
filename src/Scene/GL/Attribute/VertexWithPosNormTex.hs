@@ -25,7 +25,7 @@ data Vertex = Vertex
 
 -- | Storable instance.
 instance Storable Vertex where
-    sizeOf v = sizeOf (position v) + sizeOf (normal v)
+    sizeOf v = sizeOf (position v) + sizeOf (normal v) + sizeOf (texCoord v)
     alignment v = alignment <| position v
     peek ptr = do
         p <- peek <| castPtr ptr
@@ -52,8 +52,14 @@ instance Attribute Vertex where
                                 (fromIntegral itemSize)
                                 (pointerOffset 0)
 
-        -- Texture coordinate attribute.
+        -- Normal attribute.
         GL.glEnableVertexAttribArray 1
         GL.glVertexAttribPointer 1 3 GL.GL_FLOAT GL.GL_FALSE
                                  (fromIntegral itemSize)
                                  (pointerOffset <| sizeOf (position first))
+
+        -- Texture coordinate attribute.
+        GL.glEnableVertexAttribArray 2
+        GL.glVertexAttribPointer 2 2 GL.GL_FLOAT GL.GL_FALSE
+                                 (fromIntegral itemSize)
+                                 (pointerOffset <| sizeOf (position first) + sizeOf (normal first))

@@ -11,6 +11,9 @@ import           VertexTests                    (withPosAlignment,
                                                  withPosNormAlignment,
                                                  withPosNormEncodeDecode,
                                                  withPosNormSizeOf,
+                                                 withPosNormTexAlignment,
+                                                 withPosNormTexEncodeDecode,
+                                                 withPosNormTexSizeOf,
                                                  withPosSizeOf,
                                                  withPosTexAlignment,
                                                  withPosTexEncodeDecode,
@@ -31,6 +34,9 @@ testSuite =
         , testCase "WithPosNorm sizeOf == 24" withPosNormSizeOf
         , testCase "WithPosNorm alignment == 4" withPosNormAlignment
         , testCase "WithPosNorm encodeDecode" withPosNormEncodeDecode
+        , testCase "WithPosNormTex sizeOf == 32" withPosNormTexSizeOf
+        , testCase "WithPosNormTex alignment == 4" withPosNormTexAlignment
+        , testCase "WithPosNormTex encodeDecode" withPosNormTexEncodeDecode
         ]
     , testGroup "Kernel tests"
         [ testCase "Kernel smoke test" smokeTest
