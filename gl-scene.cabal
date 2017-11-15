@@ -18,6 +18,7 @@ library
   exposed-modules:     Scene
                        Scene.GL.Attribute.VertexWithPos
                        Scene.GL.Attribute.VertexWithPosNorm
+                       Scene.GL.Attribute.VertexWithPosNormTex
                        Scene.GL.Attribute.VertexWithPosTex
   other-modules:       Scene.Callback
                        Scene.Kernel
