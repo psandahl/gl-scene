@@ -29,6 +29,7 @@ library
                        Scene.Types
                        Scene.Viewer
                        Scene.GL.Attribute
+                       Scene.GL.Framebuffer
                        Scene.GL.Mesh
                        Scene.GL.Program
                        Scene.GL.Resource

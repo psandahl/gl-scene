@@ -23,6 +23,7 @@ import           Control.DeepSeq        (($!!))
 import           Data.ByteString.Char8  (ByteString)
 import           Data.IORef             (IORef, readIORef, writeIORef)
 import           Graphics.UI.GLFW       (Window)
+import           Scene.GL.Framebuffer   (Framebuffer, FramebufferRequest)
 import           Scene.GL.Mesh          (Mesh, MeshRequest)
 import           Scene.GL.Program       (Program, ProgramRequest)
 import           Scene.GL.Texture       (Texture, TextureRequest)
@@ -32,20 +33,22 @@ import           Scene.Types            (Event, RenderState, Subscription,
                                          Viewport)
 
 data Runtime = Runtime
-    { window            :: !Window
-    , logger            :: !Logger
-    , viewport          :: !(IORef Viewport)
-    , frameStart        :: !Double
-    , currentScene      :: !(TVar Scene)
-    , renderState       :: !(TVar RenderState)
-    , subscriptionQueue :: !(TQueue Subscription)
-    , eventQueue        :: !(TQueue Event)
-    , programRequest    :: !(TQueue (ProgramRequest ByteString))
-    , programReply      :: !(TQueue (Either String Program))
-    , meshRequest       :: !(TQueue MeshRequest)
-    , meshReply         :: !(TQueue Mesh)
-    , textureRequest    :: !(TQueue (TextureRequest DynamicImage))
-    , textureReply      :: !(TQueue Texture)
+    { window             :: !Window
+    , logger             :: !Logger
+    , viewport           :: !(IORef Viewport)
+    , frameStart         :: !Double
+    , currentScene       :: !(TVar Scene)
+    , renderState        :: !(TVar RenderState)
+    , subscriptionQueue  :: !(TQueue Subscription)
+    , eventQueue         :: !(TQueue Event)
+    , programRequest     :: !(TQueue (ProgramRequest ByteString))
+    , programReply       :: !(TQueue (Either String Program))
+    , meshRequest        :: !(TQueue MeshRequest)
+    , meshReply          :: !(TQueue Mesh)
+    , textureRequest     :: !(TQueue (TextureRequest DynamicImage))
+    , textureReply       :: !(TQueue Texture)
+    , framebufferRequest :: !(TQueue FramebufferRequest)
+    , framebufferReply   :: !(TQueue (Either String Framebuffer))
     }
 
 -- | Get the 'Viewport' value.

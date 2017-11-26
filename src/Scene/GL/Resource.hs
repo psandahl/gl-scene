@@ -7,11 +7,13 @@
 -- Portability: portable
 module Scene.GL.Resource
     ( genVertexArray
-    , genBuffer
     , delVertexArray
+    , genBuffer
     , delBuffer
     , genTexture
     , delTexture
+    , genFramebuffer
+    , delFramebuffer
     ) where
 
 import           Foreign     (Ptr, peekArray, withArray)
@@ -40,6 +42,14 @@ genTexture = genResource GL.glGenTextures
 -- | Delete a texture object.
 delTexture :: GL.GLuint -> IO ()
 delTexture = delResource GL.glDeleteTextures
+
+-- | Generate a framebuffer object.
+genFramebuffer :: IO GL.GLuint
+genFramebuffer = genResource GL.glGenFramebuffers
+
+-- | Delete a framebuffer object.
+delFramebuffer :: GL.GLuint -> IO ()
+delFramebuffer = delResource GL.glDeleteFramebuffers
 
 -- | OpenGL resources are allocated as arrays or the resource. This helper
 -- function just makes single resources.

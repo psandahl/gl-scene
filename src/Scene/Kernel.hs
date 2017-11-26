@@ -97,6 +97,8 @@ viewScenes configuration onInit onEvent onExit = do
             meshReply <- newTQueueIO
             textureRequest <- newTQueueIO
             textureReply <- newTQueueIO
+            framebufferRequest <- newTQueueIO
+            framebufferReply <- newTQueueIO
 
             -- Start the render thread.
             viewport <- newIORef Viewport { width = width', height = height' }
@@ -117,6 +119,8 @@ viewScenes configuration onInit onEvent onExit = do
                         , Runtime.meshReply = meshReply
                         , Runtime.textureRequest = textureRequest
                         , Runtime.textureReply = textureReply
+                        , Runtime.framebufferRequest = framebufferRequest
+                        , Runtime.framebufferReply = framebufferReply
                         }
 
             -- Continue with application thread in the current thread.
@@ -134,6 +138,8 @@ viewScenes configuration onInit onEvent onExit = do
                     , Viewer.meshReply = meshReply
                     , Viewer.textureRequest = textureRequest
                     , Viewer.textureReply = textureReply
+                    , Viewer.framebufferRequest = framebufferRequest
+                    , Viewer.framebufferReply = framebufferReply
                     }
             return $ Right ()
 

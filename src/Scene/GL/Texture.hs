@@ -8,7 +8,7 @@
 -- Stability: experimental
 -- Portability: portable
 module Scene.GL.Texture
-    ( Texture
+    ( Texture (..)
     , TextureBinding (..)
     , TextureFormat (..)
     , TextureMagFilter (..)

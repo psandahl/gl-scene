@@ -16,6 +16,7 @@ module Scene.Viewer
     , programFromByteStrings
     , meshFromRequest
     , textureFromRequest
+    , framebufferFromRequest
     , waitOnTermination
     , setScene
     , subscribeKeyboard
@@ -36,6 +37,7 @@ import           Control.Concurrent.STM   (TQueue, TVar, atomically, readTQueue,
 import           Control.DeepSeq          (($!!))
 import           Data.ByteString.Char8    (ByteString)
 import           Flow                     ((<|))
+import           Scene.GL.Framebuffer     (Framebuffer, FramebufferRequest)
 import           Scene.GL.Mesh            (Mesh, MeshRequest,
                                            hasNonEmptyVectors)
 import           Scene.GL.Program         (Program, ProgramRequest, readSources)
@@ -51,18 +53,20 @@ import           Text.Printf              (printf)
 -- | The viewer record is a handle from the application to the runtime of
 -- the viewer library. To the user the record is opaque.
 data Viewer = Viewer
-    { renderThread      :: !(Async ())
-    , logger            :: !Logger
-    , currentScene      :: !(TVar Scene)
-    , renderState       :: !(TVar RenderState)
-    , subscriptionQueue :: !(TQueue Subscription)
-    , eventQueue        :: !(TQueue Event)
-    , programRequest    :: !(TQueue (ProgramRequest ByteString))
-    , programReply      :: !(TQueue (Either String Program))
-    , meshRequest       :: !(TQueue MeshRequest)
-    , meshReply         :: !(TQueue Mesh)
-    , textureRequest    :: !(TQueue (TextureRequest DynamicImage))
-    , textureReply      :: !(TQueue Texture)
+    { renderThread       :: !(Async ())
+    , logger             :: !Logger
+    , currentScene       :: !(TVar Scene)
+    , renderState        :: !(TVar RenderState)
+    , subscriptionQueue  :: !(TQueue Subscription)
+    , eventQueue         :: !(TQueue Event)
+    , programRequest     :: !(TQueue (ProgramRequest ByteString))
+    , programReply       :: !(TQueue (Either String Program))
+    , meshRequest        :: !(TQueue MeshRequest)
+    , meshReply          :: !(TQueue Mesh)
+    , textureRequest     :: !(TQueue (TextureRequest DynamicImage))
+    , textureReply       :: !(TQueue Texture)
+    , framebufferRequest :: !(TQueue FramebufferRequest)
+    , framebufferReply   :: !(TQueue (Either String Framebuffer))
     }
 
 -- | Output a 'LogStr' to the logger.
@@ -165,6 +169,15 @@ textureFromRequest viewer request = do
             Right <$> (atomically <| readTQueue (textureReply viewer))
 
         Left err -> return $ Left err
+
+-- | Construct a 'Framebuffer' from a 'FramebufferRequest'.
+framebufferFromRequest :: Viewer -> FramebufferRequest
+                       -> IO (Either String Framebuffer)
+framebufferFromRequest viewer request = do
+    infoLog (logger viewer) <|
+        printf "gl-scene 'framebufferFromRequest' called with=%s" (show request)
+    atomically <| writeTQueue (framebufferRequest viewer) $!! request
+    atomically <| readTQueue (framebufferReply viewer)
 
 -- | Wait until the render thread has terminated.
 waitOnTermination :: Viewer -> IO ()
