@@ -18,7 +18,7 @@ module Scene.Viewer
     , textureFromRequest
     , framebufferFromRequest
     , waitOnTermination
-    , setScene
+    , setSceneGraph
     , subscribeKeyboard
     , unsubscribeKeyboard
     , subscribeMouseButton
@@ -45,7 +45,7 @@ import           Scene.GL.Texture         (Texture,
                                            TextureRequest (textureSource))
 import           Scene.Logger             (LogStr, Logger, infoLog,
                                            uncheckedLog)
-import           Scene.Scene              (Scene)
+import           Scene.Scene              (SceneGraph)
 import           Scene.Types              (Event, RenderState (..),
                                            Subscription (..))
 import           Text.Printf              (printf)
@@ -55,7 +55,7 @@ import           Text.Printf              (printf)
 data Viewer = Viewer
     { renderThread       :: !(Async ())
     , logger             :: !Logger
-    , currentScene       :: !(TVar Scene)
+    , currentSceneGraph  :: !(TVar SceneGraph)
     , renderState        :: !(TVar RenderState)
     , subscriptionQueue  :: !(TQueue Subscription)
     , eventQueue         :: !(TQueue Event)
@@ -81,11 +81,11 @@ close viewer = do
     infoLog (logger viewer) "gl-scene 'close' called."
     setRenderState viewer Closing
 
--- | Set a new 'Scene'.
-setScene :: Viewer -> Scene -> IO ()
-setScene viewer scene =
-    atomically <| writeTVar (currentScene viewer) $!! scene
-{-# INLINE setScene #-}
+-- | Set a new 'SceneGraph'.
+setSceneGraph :: Viewer -> SceneGraph -> IO ()
+setSceneGraph viewer sceneGraph =
+    atomically <| writeTVar (currentSceneGraph viewer) $!! sceneGraph
+{-# INLINE setSceneGraph #-}
 
 -- | Subscribe to keyboard events.
 subscribeKeyboard :: Viewer -> IO ()

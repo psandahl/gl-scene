@@ -11,7 +11,7 @@
 -- The Scene module provides the scene graph data structures and the rendering
 -- of the graph.
 module Scene.Scene
-    ( Scene (..)
+    ( SceneGraph (..)
     , Entity (..)
     , render
     ) where
@@ -30,10 +30,10 @@ import qualified Scene.GL.Texture as Texture
 import           Scene.GL.Uniform (UniformValue)
 import           Scene.Types      (Viewport (..))
 
--- | The Scene record is the root of the scene graph.
-data Scene = Scene
-    { sceneSettings :: ![Setting]
-    , sceneEntities :: ![Entity]
+-- | The SceneGraph record is the root of the scene graph.
+data SceneGraph = SceneGraph
+    { sceneGraphSettings :: ![Setting]
+    , sceneGraphEntities :: ![Entity]
     } deriving (Generic, NFData, Show)
 
 -- | The Enitity are stuff that can be rendered, or groups of stuff that
@@ -48,12 +48,12 @@ data Entity
         }
     deriving (Generic, NFData, Show)
 
--- | Render the 'Scene'.
-render :: Viewport -> Scene -> IO ()
-render viewport scene = do
+-- | Render the 'SceneGraph'.
+render :: Viewport -> SceneGraph -> IO ()
+render viewport sceneGraph = do
     GL.glViewport 0 0 (fromIntegral <| width viewport) (fromIntegral <| height viewport)
-    withTemporarySettings (sceneSettings scene) $
-        mapM_ renderEntity <| sceneEntities scene
+    withTemporarySettings (sceneGraphSettings sceneGraph) $
+        mapM_ renderEntity <| sceneGraphEntities sceneGraph
 
 -- | Render a single 'Entity'.
 renderEntity :: Entity -> IO ()

@@ -33,7 +33,7 @@ import           Scene.Logger             (Logger, closeLogger, infoLog,
 import           Scene.Runtime            (Runtime)
 import qualified Scene.Runtime            as Runtime
 import qualified Scene.Scanner            as Scanner
-import           Scene.Scene              (Scene (..))
+import           Scene.Scene              (SceneGraph (..))
 import qualified Scene.Scene              as Scene
 import           Scene.Types              (DisplayMode (..), Event (..),
                                            RenderState (..), Viewport (..))
@@ -43,13 +43,13 @@ import           Text.Printf              (printf)
 
 -- | Configuration data for the 'Viewer' window to create.
 data Configuration = Configuration
-    { caption        :: !String
-    , glVersionMajor :: !Int
-    , glVersionMinor :: !Int
-    , displayMode    :: !DisplayMode
-    , globalSettings :: ![Setting]
-    , initialScene   :: !Scene
-    , debugContext   :: !Bool
+    { caption           :: !String
+    , glVersionMajor    :: !Int
+    , glVersionMinor    :: !Int
+    , displayMode       :: !DisplayMode
+    , globalSettings    :: ![Setting]
+    , initialSceneGraph :: !SceneGraph
+    , debugContext      :: !Bool
     } deriving Show
 
 -- | Default 'Configuration'.
@@ -61,10 +61,10 @@ defaultConfiguration =
         , glVersionMinor = 3
         , displayMode = Windowed 1024 768
         , globalSettings = []
-        , initialScene =
-            Scene { sceneSettings = []
-                  , sceneEntities = []
-                  }
+        , initialSceneGraph =
+            SceneGraph { sceneGraphSettings = []
+                       , sceneGraphEntities = []
+                       }
         , debugContext = True
         }
 
@@ -87,7 +87,7 @@ viewScenes configuration onInit onEvent onExit = do
 
             -- Create the shared data between the renderer and the application.
             logger <- mkLogger <| debugContext configuration
-            currentScene <- newTVarIO $!! initialScene configuration
+            currentSceneGraph <- newTVarIO $!! initialSceneGraph configuration
             renderState <- newTVarIO $!! Initializing
             subscriptionQueue <- newTQueueIO
             eventQueue  <- newTQueueIO
@@ -109,7 +109,7 @@ viewScenes configuration onInit onEvent onExit = do
                         , Runtime.logger = logger
                         , Runtime.viewport = viewport
                         , Runtime.frameStart = 0
-                        , Runtime.currentScene = currentScene
+                        , Runtime.currentSceneGraph = currentSceneGraph
                         , Runtime.renderState = renderState
                         , Runtime.subscriptionQueue = subscriptionQueue
                         , Runtime.eventQueue = eventQueue
@@ -128,7 +128,7 @@ viewScenes configuration onInit onEvent onExit = do
                 Viewer.Viewer
                     { Viewer.renderThread = thread
                     , Viewer.logger = logger
-                    , Viewer.currentScene = currentScene
+                    , Viewer.currentSceneGraph = currentSceneGraph
                     , Viewer.renderState = renderState
                     , Viewer.subscriptionQueue = subscriptionQueue
                     , Viewer.eventQueue = eventQueue
@@ -184,8 +184,8 @@ renderLoop = go
                 let duration = now - Runtime.frameStart runtime
                 Runtime.emitEvent runtime $ Frame duration viewport
 
-            -- Render the current scene.
-            Scene.render viewport =<< Runtime.getCurrentScene runtime
+            -- Render the current scene graph.
+            Scene.render viewport =<< Runtime.getCurrentSceneGraph runtime
 
             let window = Runtime.window runtime
 

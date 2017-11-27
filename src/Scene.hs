@@ -32,7 +32,7 @@ module Scene
     , Program
     , ProgramRequest (..)
     , Setting (..)
-    , Scene (..)
+    , SceneGraph (..)
     , ShaderType (..)
     , Texture
     , TextureBinding (..)
@@ -55,7 +55,7 @@ module Scene
     , programFromFiles
     , programFromByteStrings
     , sceneLog
-    , setScene
+    , setSceneGraph
     , subscribeKeyboard
     , subscribeCursurPos
     , subscribeMouseButton
@@ -90,14 +90,14 @@ import           Scene.GL.Uniform     (Uniform (..), UniformValue (..))
 import           Scene.Kernel         (Configuration (..), defaultConfiguration,
                                        viewScenes)
 import           Scene.Logger         (LogStr, ToLogStr (..))
-import           Scene.Scene          (Entity (..), Scene (..))
+import           Scene.Scene          (Entity (..), SceneGraph (..))
 import           Scene.Types          (DisplayMode (..), Event (..),
                                        Viewport (..))
 import           Scene.Viewer         (Viewer, close, framebufferFromRequest,
                                        meshFromRequest, programFromByteStrings,
-                                       programFromFiles, sceneLog, setScene,
-                                       subscribeCursurPos, subscribeKeyboard,
-                                       subscribeMouseButton, textureFromRequest,
-                                       unsubscribeCursorPos,
+                                       programFromFiles, sceneLog,
+                                       setSceneGraph, subscribeCursurPos,
+                                       subscribeKeyboard, subscribeMouseButton,
+                                       textureFromRequest, unsubscribeCursorPos,
                                        unsubscribeKeyboard,
                                        unsubscribeMouseButton)
