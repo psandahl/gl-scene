@@ -32,6 +32,7 @@ module Scene
     , Program
     , ProgramRequest (..)
     , Setting (..)
+    , Scene (..)
     , SceneGraph (..)
     , ShaderType (..)
     , Texture
@@ -90,7 +91,7 @@ import           Scene.GL.Uniform     (Uniform (..), UniformValue (..))
 import           Scene.Kernel         (Configuration (..), defaultConfiguration,
                                        viewScenes)
 import           Scene.Logger         (LogStr, ToLogStr (..))
-import           Scene.Scene          (Entity (..), SceneGraph (..))
+import           Scene.Scene          (Entity (..), Scene (..), SceneGraph (..))
 import           Scene.Types          (DisplayMode (..), Event (..),
                                        Viewport (..))
 import           Scene.Viewer         (Viewer, close, framebufferFromRequest,

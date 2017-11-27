@@ -8,7 +8,7 @@
 -- Stability: experimental
 -- Portability: portable
 module Scene.GL.Framebuffer
-    ( Framebuffer (colorTexture, depthTexture)
+    ( Framebuffer (colorTexture, depthTexture, framebufferViewport)
     , FramebufferRequest (..)
     , fromRequest
     , enable
@@ -24,13 +24,15 @@ import qualified Graphics.GL       as GL
 import           Scene.GL.Resource (delFramebuffer, genFramebuffer, genTexture)
 import           Scene.GL.Texture  (Texture (..))
 import qualified Scene.GL.Texture  as Texture
+import           Scene.Types       (Viewport (..))
 import           Text.Printf       (printf)
 
 -- | A framebuffer with color and depth attachments as 'Texture's.
 data Framebuffer = Framebuffer
-    { framebufferId :: !GL.GLuint
-    , colorTexture  :: !Texture
-    , depthTexture  :: !Texture
+    { framebufferId       :: !GL.GLuint
+    , colorTexture        :: !Texture
+    , depthTexture        :: !Texture
+    , framebufferViewport :: !Viewport
     } deriving (Eq, Generic, NFData, Show)
 
 -- | A request for a new 'Framebuffer'.
@@ -89,6 +91,10 @@ fromRequest request = do
                         { framebufferId = fbo
                         , colorTexture = Texture color GL.GL_TEXTURE_2D
                         , depthTexture = Texture depth GL.GL_TEXTURE_2D
+                        , framebufferViewport =
+                            Viewport { width = framebufferWidth request
+                                     , height = framebufferHeight request
+                                     }
                         }
             return <| Right framebuffer
         else do

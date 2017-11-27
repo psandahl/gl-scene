@@ -63,7 +63,7 @@ defaultConfiguration =
         , globalSettings = []
         , initialSceneGraph =
             SceneGraph { sceneGraphSettings = []
-                       , sceneGraphEntities = []
+                       , initialScene = Nothing
                        }
         , debugContext = True
         }
