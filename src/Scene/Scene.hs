@@ -39,23 +39,43 @@ data SceneGraph = SceneGraph
     { sceneGraphSettings :: ![Setting]
     -- ^ The 'Setting's for the complete graph. E.g. clearing of the
     -- default framebuffer.
-    , initialScene       :: !(Maybe Scene)
+
+    , firstScene         :: !(Maybe Scene)
+    -- ^ The first 'Scene' of the graph.
     } deriving (Generic, NFData, Show)
 
+-- | The Scene record, specyfing stuff for the scene to be rendered.
 data Scene = Scene
-    { renderBuffer  :: !(Maybe Framebuffer)
-    , sceneSettings :: ![Setting]
-    , sceneEntities :: ![Entity]
-    , nextScene     :: !(Maybe Scene)
+    { sceneRenderBuffer :: !(Maybe Framebuffer)
+    -- ^ Optionally give a 'Framebuffer' target for the scene. If Nothing the
+    -- default framebuffer will be used.
+
+    , sceneSettings     :: ![Setting]
+    -- ^ 'Setting's for the scene.
+
+    , sceneEntities     :: ![Entity]
+    -- ^ Entities to be rendered within the scene.
+
+    , nextScene         :: !(Maybe Scene)
+    -- ^ The next scene to be handled.
     } deriving (Generic, NFData, Show)
 
 -- | The Entity is stuff to be rendered.
 data Entity = Entity
     { entitySettings :: ![Setting]
+    -- ^ 'Setting's for the entity.
+
     , entityProgram  :: !Program
+    -- ^ The 'Program' used by the entity.
+
     , entityMesh     :: !Mesh
+    -- ^ The 'Mesh' used by the entity.
+
     , entityUniforms :: ![UniformValue]
+    -- ^ The list of 'UniformValue's for the entity.
+
     , entityTextures :: ![TextureBinding]
+    -- ^ The list of 'TextureBinding's for the entity.
     } deriving (Generic, NFData, Show)
 
 -- | Render the 'SceneGraph'.
@@ -63,12 +83,15 @@ render :: Viewport -> SceneGraph -> IO ()
 render viewport sceneGraph = do
     setViewport viewport
     withTemporarySettings (sceneGraphSettings sceneGraph) $
-        renderScenes viewport <| initialScene sceneGraph
+        renderScenes viewport <| firstScene sceneGraph
 
+-- | Render a single 'Scene'. Three different runtime alternatives ...
 renderScenes :: Viewport -> Maybe Scene -> IO ()
 renderScenes viewport (Just scene)
-    | isJust <| renderBuffer scene = do
-        let fb = fromJust <| renderBuffer scene
+
+    -- 1. We have a specific 'Framebuffer' to render to.
+    | isJust <| sceneRenderBuffer scene = do
+        let fb = fromJust <| sceneRenderBuffer scene
         Framebuffer.enable fb
         setViewport <| framebufferViewport fb
         withTemporarySettings (sceneSettings scene) $
@@ -76,15 +99,17 @@ renderScenes viewport (Just scene)
         Framebuffer.disable
         renderScenes viewport <| nextScene scene
 
+    -- 2. Render stuff to the default framebuffer.
     | otherwise = do
         setViewport viewport
         withTemporarySettings (sceneSettings scene) $
             renderEntities <| sceneEntities scene
         renderScenes viewport <| nextScene scene
 
--- No more scenes to process. Return.
+-- 3. No more 'Scene's to process.
 renderScenes _viewport Nothing = return ()
 
+-- | Render all 'Entity's.
 renderEntities :: [Entity] -> IO ()
 renderEntities = mapM_ renderEntity
 
