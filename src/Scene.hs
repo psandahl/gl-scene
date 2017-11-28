@@ -16,7 +16,7 @@ module Scene
     , DepthFunction (..)
     , Entity (..)
     , Face (..)
-    , Framebuffer (colorTexture, depthTexture)
+    , Framebuffer (colorTexture, depthTexture, framebufferViewport)
     , FramebufferRequest (..)
     , Event (..)
     , Key (..)
@@ -31,9 +31,9 @@ module Scene
     , Primitive (..)
     , Program
     , ProgramRequest (..)
+    , Rendering (..)
     , Setting (..)
     , Scene (..)
-    , SceneGraph (..)
     , ShaderType (..)
     , Texture
     , TextureBinding (..)
@@ -56,7 +56,7 @@ module Scene
     , programFromFiles
     , programFromByteStrings
     , sceneLog
-    , setSceneGraph
+    , setScene
     , subscribeKeyboard
     , subscribeCursurPos
     , subscribeMouseButton
@@ -72,7 +72,7 @@ import           Graphics.UI.GLFW     (Key (..), KeyState (..),
                                        ModifierKeys (..), MouseButton (..),
                                        MouseButtonState (..))
 import           Scene.GL.Attribute   (Attribute (..))
-import           Scene.GL.Framebuffer (Framebuffer (colorTexture, depthTexture),
+import           Scene.GL.Framebuffer (Framebuffer (colorTexture, depthTexture, framebufferViewport),
                                        FramebufferRequest (..))
 import           Scene.GL.Mesh        (Mesh, MeshRequest (..), Primitive (..))
 import           Scene.GL.Program     (Program, ProgramRequest (..),
@@ -91,14 +91,14 @@ import           Scene.GL.Uniform     (Uniform (..), UniformValue (..))
 import           Scene.Kernel         (Configuration (..), defaultConfiguration,
                                        viewScenes)
 import           Scene.Logger         (LogStr, ToLogStr (..))
-import           Scene.Scene          (Entity (..), Scene (..), SceneGraph (..))
+import           Scene.Scene          (Entity (..), Rendering (..), Scene (..))
 import           Scene.Types          (DisplayMode (..), Event (..),
                                        Viewport (..))
 import           Scene.Viewer         (Viewer, close, framebufferFromRequest,
                                        meshFromRequest, programFromByteStrings,
-                                       programFromFiles, sceneLog,
-                                       setSceneGraph, subscribeCursurPos,
-                                       subscribeKeyboard, subscribeMouseButton,
-                                       textureFromRequest, unsubscribeCursorPos,
+                                       programFromFiles, sceneLog, setScene,
+                                       subscribeCursurPos, subscribeKeyboard,
+                                       subscribeMouseButton, textureFromRequest,
+                                       unsubscribeCursorPos,
                                        unsubscribeKeyboard,
                                        unsubscribeMouseButton)

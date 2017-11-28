@@ -11,7 +11,7 @@ module Scene.Runtime
     ( Runtime (..)
     , getViewport
     , setViewport
-    , getCurrentSceneGraph
+    , getCurrentScene
     , getRenderState
     , emitEvent
     ) where
@@ -28,7 +28,7 @@ import           Scene.GL.Mesh          (Mesh, MeshRequest)
 import           Scene.GL.Program       (Program, ProgramRequest)
 import           Scene.GL.Texture       (Texture, TextureRequest)
 import           Scene.Logger           (Logger)
-import           Scene.Scene            (SceneGraph)
+import           Scene.Scene            (Scene)
 import           Scene.Types            (Event, RenderState, Subscription,
                                          Viewport)
 
@@ -37,7 +37,7 @@ data Runtime = Runtime
     , logger             :: !Logger
     , viewport           :: !(IORef Viewport)
     , frameStart         :: !Double
-    , currentSceneGraph  :: !(TVar SceneGraph)
+    , currentScene       :: !(TVar Scene)
     , renderState        :: !(TVar RenderState)
     , subscriptionQueue  :: !(TQueue Subscription)
     , eventQueue         :: !(TQueue Event)
@@ -61,10 +61,10 @@ setViewport :: Runtime -> Viewport -> IO ()
 setViewport runtime = writeIORef (viewport runtime)
 {-# INLINE setViewport #-}
 
--- | Get the current 'SceneGraph'.
-getCurrentSceneGraph :: Runtime -> IO SceneGraph
-getCurrentSceneGraph = readTVarIO . currentSceneGraph
-{-# INLINE getCurrentSceneGraph #-}
+-- | Get the current 'Scene'.
+getCurrentScene :: Runtime -> IO Scene
+getCurrentScene = readTVarIO . currentScene
+{-# INLINE getCurrentScene #-}
 
 -- | Get the current 'RenderState' value.
 getRenderState :: Runtime -> IO RenderState

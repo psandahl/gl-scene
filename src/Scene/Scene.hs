@@ -11,8 +11,8 @@
 -- The Scene module provides the scene graph data structures and the rendering
 -- of the graph.
 module Scene.Scene
-    ( SceneGraph (..)
-    , Scene (..)
+    ( Scene (..)
+    , Rendering (..)
     , Entity (..)
     , render
     ) where
@@ -34,29 +34,29 @@ import qualified Scene.GL.Texture     as Texture
 import           Scene.GL.Uniform     (UniformValue)
 import           Scene.Types          (Viewport (..))
 
--- | The SceneGraph record is the root of the scene graph.
-data SceneGraph = SceneGraph
-    { sceneGraphSettings :: ![Setting]
-    -- ^ The 'Setting's for the complete graph. E.g. clearing of the
-    -- default framebuffer.
+-- | The Scene record is the root of stuff to be rendered during a frame. A
+-- Scene consist of zero or more 'Rendering's.
+data Scene = Scene
+    { sceneSettings  :: ![Setting]
+    -- ^ 'Setting's that are common for the complete graph.
 
-    , firstScene         :: !(Maybe Scene)
-    -- ^ The first 'Scene' of the graph.
+    , firstRendering :: !(Maybe Rendering)
+    -- ^ The first 'Rendering' of the Scene.
     } deriving (Generic, NFData, Show)
 
--- | The Scene record, specyfing stuff for the scene to be rendered.
-data Scene = Scene
-    { sceneRenderBuffer :: !(Maybe Framebuffer)
-    -- ^ Optionally give a 'Framebuffer' target for the scene. If Nothing the
+-- | The Rendering record, representing one rendering pass.
+data Rendering = Rendering
+    { renderingBuffer   :: !(Maybe Framebuffer)
+    -- ^ Optionally give a 'Framebuffer' target for the Rendering. If Nothing the
     -- default framebuffer will be used.
 
-    , sceneSettings     :: ![Setting]
-    -- ^ 'Setting's for the scene.
+    , renderingSettings :: ![Setting]
+    -- ^ 'Setting's for the rendering.
 
-    , sceneEntities     :: ![Entity]
+    , renderingEntities :: ![Entity]
     -- ^ Entities to be rendered within the scene.
 
-    , nextScene         :: !(Maybe Scene)
+    , nextRendering     :: !(Maybe Rendering)
     -- ^ The next scene to be handled.
     } deriving (Generic, NFData, Show)
 
@@ -78,36 +78,36 @@ data Entity = Entity
     -- ^ The list of 'TextureBinding's for the entity.
     } deriving (Generic, NFData, Show)
 
--- | Render the 'SceneGraph'.
-render :: Viewport -> SceneGraph -> IO ()
-render viewport sceneGraph = do
+-- | Render the 'Scene'.
+render :: Viewport -> Scene -> IO ()
+render viewport scene = do
     setViewport viewport
-    withTemporarySettings (sceneGraphSettings sceneGraph) $
-        renderScenes viewport <| firstScene sceneGraph
+    withTemporarySettings (sceneSettings scene) $
+        performRenderings viewport <| firstRendering scene
 
--- | Render a single 'Scene'. Three different runtime alternatives ...
-renderScenes :: Viewport -> Maybe Scene -> IO ()
-renderScenes viewport (Just scene)
+-- |  Recursively perform renderings. Three different runtime alternatives ...
+performRenderings :: Viewport -> Maybe Rendering -> IO ()
+performRenderings viewport (Just rendering)
 
     -- 1. We have a specific 'Framebuffer' to render to.
-    | isJust <| sceneRenderBuffer scene = do
-        let fb = fromJust <| sceneRenderBuffer scene
+    | isJust <| renderingBuffer rendering = do
+        let fb = fromJust <| renderingBuffer rendering
         Framebuffer.enable fb
         setViewport <| framebufferViewport fb
-        withTemporarySettings (sceneSettings scene) $
-            renderEntities <| sceneEntities scene
+        withTemporarySettings (renderingSettings rendering) $
+            renderEntities <| renderingEntities rendering
         Framebuffer.disable
-        renderScenes viewport <| nextScene scene
+        performRenderings viewport <| nextRendering rendering
 
     -- 2. Render stuff to the default framebuffer.
     | otherwise = do
         setViewport viewport
-        withTemporarySettings (sceneSettings scene) $
-            renderEntities <| sceneEntities scene
-        renderScenes viewport <| nextScene scene
+        withTemporarySettings (renderingSettings rendering) $
+            renderEntities <| renderingEntities rendering
+        performRenderings viewport <| nextRendering rendering
 
--- 3. No more 'Scene's to process.
-renderScenes _viewport Nothing = return ()
+-- 3. No more 'Rendering's to process.
+performRenderings _viewport Nothing = return ()
 
 -- | Render all 'Entity's.
 renderEntities :: [Entity] -> IO ()
