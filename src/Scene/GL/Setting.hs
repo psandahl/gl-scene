@@ -72,12 +72,14 @@ data Capability
     = DepthTest
     | CullFace
     | Blend
+    | ClipDistance !Int
     deriving (Eq, Generic, NFData, Show)
 
 instance ToGLenum Capability where
-    toGLenum DepthTest = GL.GL_DEPTH_TEST
-    toGLenum CullFace  = GL.GL_CULL_FACE
-    toGLenum Blend     = GL.GL_BLEND
+    toGLenum DepthTest        = GL.GL_DEPTH_TEST
+    toGLenum CullFace         = GL.GL_CULL_FACE
+    toGLenum Blend            = GL.GL_BLEND
+    toGLenum (ClipDistance i) = GL.GL_CLIP_DISTANCE0 + fromIntegral i
 
 -- | Depth functions.
 data DepthFunction
